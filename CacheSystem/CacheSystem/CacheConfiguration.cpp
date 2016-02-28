@@ -13,6 +13,6 @@ namespace CacheSystem
 	{
 		for (unsigned int i = 0; i < conf.paramsInfo.size(); i++)
 			paramsInfo.push_back(conf.paramsInfo[i]->getCopy());
-		returnInfo = conf.returnInfo->getCopy();
+		returnInfo = conf.returnInfo == nullptr ? nullptr : conf.returnInfo->getCopy();
 	}
 }

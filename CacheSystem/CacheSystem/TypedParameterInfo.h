@@ -88,7 +88,7 @@ namespace CacheSystem
 
 	template <class Type>
 	TypedParameterInfo<Type>::TypedParameterInfo() :
-		ParameterInfo(ParameterType::Input),
+		ParameterInfo(ParameterType::InputParam),
 		equalFunction(StandardFunctions::standardEqualFunction<Type>),
 		initFunction(StandardFunctions::standardInitFunction<Type>),
 		outputFunction(StandardFunctions::standardOutputFunction<Type>),

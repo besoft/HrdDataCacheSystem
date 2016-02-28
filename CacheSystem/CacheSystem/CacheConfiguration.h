@@ -37,7 +37,7 @@ namespace CacheSystem
 		/**
 		creates a clear configuration with no information set
 		*/
-		CacheConfiguration() {}
+		CacheConfiguration() : returnInfo(nullptr) {}
 
 		/**
 		correctly creates a copy of a given configuration

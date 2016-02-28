@@ -92,6 +92,7 @@ void print(int* v)
 	cout << endl;
 }
 
+
 int main()
 {
 	const int count = 30;

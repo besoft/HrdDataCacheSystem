@@ -61,6 +61,7 @@ namespace CacheSystem
 		if no data is found, the function is called to create it
 		*/
 		ReturnType call(ParamTypes... params);
+		template <class... FuncParamTypes> void call(FuncParamTypes... params);
 	};
 
 	template <class ReturnType, class... ParamTypes>
@@ -85,6 +86,13 @@ namespace CacheSystem
 				return ((TypedValue<ReturnType>*)data->getReturnValue())->getValue();
 			return returnFunction(((TypedValue<ReturnType>*)data->getReturnValue())->getValue(), nullptr);
 		}
+	}
+
+	template <class ReturnType, class... ParamTypes>
+	template <class... FuncParamTypes>
+	void CachedFunction<ReturnType, ParamTypes...>::call(FuncParamTypes... params)
+	{
+		std::cout << "VOID!!!!!!" << std::endl;
 	}
 }
 
