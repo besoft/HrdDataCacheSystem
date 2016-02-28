@@ -50,7 +50,7 @@ namespace CacheSystem
 		~CacheConfiguration();
 
 		/**
-		returns a vector of containing information about all parameters, the info objects are in the same order as the parameters
+		returns a vector containing information about all parameters, the info objects are in the same order as the parameters
 		*/
 		const std::vector<ParameterInfo*> & getParamsInfo() { return paramsInfo; }
 

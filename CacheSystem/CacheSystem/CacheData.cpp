@@ -8,6 +8,7 @@ namespace CacheSystem
 			delete inputParameters[i];
 		for (unsigned int i = 0; i < outputParameters.size(); i++)
 			delete outputParameters[i];
-		delete returnValue;
+		if (returnValue != nullptr)
+			delete returnValue;
 	}
 }

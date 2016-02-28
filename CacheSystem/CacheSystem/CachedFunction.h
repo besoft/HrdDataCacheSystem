@@ -78,7 +78,7 @@ namespace CacheSystem
 		}
 		data->setOutput(conf.getParamsInfo(), nullptr, params...);
 		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo();
-		if (returnInfo->returnType == CacheSystem::ReturnType::Used)
+		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
 		{
  			ReturnType(*returnFunction)(const ReturnType &, void**) = returnInfo->returnFunction;
 			if (returnFunction == StandardFunctions::DirectReturn<ReturnType>)

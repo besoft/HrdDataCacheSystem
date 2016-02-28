@@ -1,16 +1,19 @@
 #ifndef _VALUE_H
 #define _VALUE_H
 
-/**
-represents a generic cached value
-*/
-class Value
+namespace CacheSystem
 {
-public:
 	/**
-	only defined to make the destructor virtual
+	represents a generic cached value
 	*/
-	virtual ~Value(){}
-};
+	class Value
+	{
+	public:
+		/**
+		only defined to make the destructor virtual
+		*/
+		virtual ~Value(){}
+	};
+}
 
 #endif

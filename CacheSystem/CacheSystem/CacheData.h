@@ -104,6 +104,8 @@ namespace CacheSystem
 		}
 
 	public:
+		CacheData() : returnValue(nullptr) {}
+
 		/**
 		sets all parameters
 		*/
@@ -119,7 +121,7 @@ namespace CacheSystem
 		template <class ReturnType> void setReturnValue(TypedReturnInfo<ReturnType>* returnInfo, void** dependencies,
 			const ReturnType & returnValue)
 		{
-			if (returnInfo->returnType == CacheSystem::ReturnType::Used)
+			if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
 			{
 				setReturnValue(returnValue, returnInfo->initFunction, dependencies, returnInfo->destroyFunction);
 			}
@@ -158,7 +160,7 @@ namespace CacheSystem
 		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{
 		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex];
-		if (info->paramType == ParameterType::Input)
+		if (info->paramType == ParameterType::InputParam)
 		{
 			TypedValue<FirstType>* value = (TypedValue<FirstType>*)inputParameters[inputIndex];
 			if (!(info->equalFunction(value->getValue(), firstParam, dependencies)))
@@ -177,7 +179,7 @@ namespace CacheSystem
 		void** dependencies, const Type & param)
 	{
 		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex];
-		if (info->paramType == ParameterType::Input)
+		if (info->paramType == ParameterType::InputParam)
 		{
 			TypedValue<Type>* value = (TypedValue<Type>*)inputParameters[inputIndex];
 			return info->equalFunction(value->getValue(), param, dependencies);
@@ -193,10 +195,10 @@ namespace CacheSystem
 		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex];
 		switch (info->paramType)
 		{
-		case ParameterType::Input:
+		case ParameterType::InputParam:
 			addInputParam(firstParam, info->initFunction, dependencies, info->destroyFunction);
 			break;
-		case ParameterType::Output:
+		case ParameterType::OutputParam:
 			addOutputParam(firstParam, info->initFunction, dependencies, info->destroyFunction);
 		}
 		setParamIteration(paramIndex + 1, paramsInfo, dependencies, otherParams...);
@@ -208,10 +210,10 @@ namespace CacheSystem
 		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex];
 		switch (info->paramType)
 		{
-		case ParameterType::Input:
+		case ParameterType::InputParam:
 			addInputParam(param, info->initFunction, dependencies, info->destroyFunction);
 			break;
-		case ParameterType::Output:
+		case ParameterType::OutputParam:
 			addOutputParam(param, info->initFunction, dependencies, info->destroyFunction);
 		}
 	}
@@ -221,7 +223,7 @@ namespace CacheSystem
 		FirstType & firstParam, OtherTypes &... otherParams)
 	{
 		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex];
-		if (info->paramType == ParameterType::Output)
+		if (info->paramType == ParameterType::OutputParam)
 		{
 			TypedValue<FirstType>* value = (TypedValue<FirstType>*)outputParameters[outputIndex];
 			info->outputFunction(value->getValue(), firstParam, dependencies);
@@ -236,7 +238,7 @@ namespace CacheSystem
 		void** dependencies, Type & param)
 	{
 		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex];
-		if (info->paramType == ParameterType::Output)
+		if (info->paramType == ParameterType::OutputParam)
 		{
 			TypedValue<Type>* value = (TypedValue<Type>*)outputParameters[outputIndex];
 			info->outputFunction(value->getValue(), param, dependencies);

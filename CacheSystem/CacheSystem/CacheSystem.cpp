@@ -18,18 +18,6 @@ int* function(int* vector1, int* vector2, int* output)
 	{
 		ret[i] = vector1[i] + vector2[i];
 	}
-	/*for (int i = 0; i < vectorSize - 1; i++)
-	{
-		for (int j = 0; j < vectorSize - i - 1; j++)
-		{
-			if (ret[j + 1] < ret[j])
-			{
-				int tmp = ret[j + 1];
-				ret[j + 1] = ret[j];
-				ret[j] = tmp;
-			}
-		}
-	}*/
 	int sum = 0;
 	for (int i = 0; i < vectorSize; i++)
 	{
@@ -119,10 +107,10 @@ int main()
 	}
 
 	CacheConfiguration conf;
-	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::Input, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy));
-	conf.setParamInfo(1, TypedParameterInfo<int*>(ParameterType::Input, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy));
-	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::Output, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy));
-	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::Used, returnInit, destroy, returnF));
+	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy));
+	conf.setParamInfo(1, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy));
+	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy));
+	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF));
 
 	CachedFunction<int*, int*, int*, int*> func(conf, function);
 	int t = clock();

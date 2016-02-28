@@ -95,7 +95,7 @@ namespace CacheSystem
 
 	template <class Type>
 	TypedReturnInfo<Type>::TypedReturnInfo() :
-		ReturnInfo(ReturnType::Used),
+		ReturnInfo(ReturnType::UsedReturn),
 		initFunction(StandardFunctions::standardInitFunction<Type>),
 		destroyFunction(StandardFunctions::standardDestroyFunction<Type>),
 		returnFunction(StandardFunctions::DirectReturn)

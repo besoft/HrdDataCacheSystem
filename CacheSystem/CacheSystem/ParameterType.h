@@ -1,14 +1,17 @@
 #ifndef _PARAMETER_TYPE_H
 #define _PARAMETER_TYPE_H
 
-/**
-represents the type of a parameter
-*/
-enum ParameterType
+namespace CacheSystem
 {
-	Input,
-	Output,
-	Ignored
-};
+	/**
+	represents the type of a parameter
+	*/
+	enum ParameterType
+	{
+		InputParam,
+		OutputParam,
+		IgnoredParam
+	};
+}
 
 #endif

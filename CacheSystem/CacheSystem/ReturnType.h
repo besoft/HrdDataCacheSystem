@@ -8,8 +8,8 @@ namespace CacheSystem
 	*/
 	enum ReturnType
 	{
-		Used,
-		Ignored
+		UsedReturn,
+		IgnoredReturn
 	};
 }
 
