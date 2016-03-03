@@ -2,13 +2,7 @@
 
 namespace CacheSystem
 {
-	CacheDataStructure::~CacheDataStructure()
-	{
-		for (unsigned int i = 0; i < cacheData.size(); i++)
-			delete cacheData[i];
-	}
-
-	void CacheDataStructure::addCacheData(CacheData* data)
+	void CacheDataStructure::addCacheData(std::shared_ptr<CacheData> data)
 	{
 		cacheData.push_back(data);
 	}

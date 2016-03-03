@@ -1,6 +1,7 @@
 #ifndef _CACHED_FUNCTION_H
 #define _CACHED_FUNCTION_H
 
+#include <memory>
 #include "CacheConfiguration.h"
 #include "CacheDataStructure.h"
 
@@ -69,10 +70,10 @@ namespace CacheSystem
 	{
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
-		CacheData* data = cacheData.getCacheData(conf.getParamsInfo(), nullptr, params...);
+		std::shared_ptr<CacheData> data = cacheData.getCacheData(conf.getParamsInfo(), nullptr, params...);
 		if (data == nullptr)
 		{
-			data = new CacheData;
+			data = std::shared_ptr<CacheData>(new CacheData);
 			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo(), nullptr, function(params...));
 			data->setParameters(conf.getParamsInfo(), nullptr, params...);
 			cacheData.addCacheData(data);
