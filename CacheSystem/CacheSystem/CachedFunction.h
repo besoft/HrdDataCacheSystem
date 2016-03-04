@@ -74,12 +74,12 @@ namespace CacheSystem
 		if (data == nullptr)
 		{
 			data = std::shared_ptr<CacheData>(new CacheData);
-			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo(), nullptr, function(params...));
+			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get(), nullptr, function(params...));
 			data->setParameters(conf.getParamsInfo(), nullptr, params...);
 			cacheData.addCacheData(data);
 		}
 		data->setOutput(conf.getParamsInfo(), nullptr, params...);
-		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo();
+		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get();
 		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
 		{
  			ReturnType(*returnFunction)(const ReturnType &, void**) = returnInfo->returnFunction;

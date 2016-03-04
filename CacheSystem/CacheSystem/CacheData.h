@@ -40,25 +40,25 @@ namespace CacheSystem
 		if results of all the comparsions are true, the method returs true, therwise it returs false
 		*/
 		template <class FirstType, class... OtherTypes> bool equalsIteration(int inputIndex, int paramIndex,
-			const std::vector<ParameterInfo*> & paramsInfo, void** dependencies, const FirstType & firstParam, const OtherTypes &... otherParams);
+			const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies, const FirstType & firstParam, const OtherTypes &... otherParams);
 
 		/**
 		stops the recursion of equalIteration
 		*/
-		template <class Type> bool equalsIteration(int inputIndex, int paramIndex, const std::vector<ParameterInfo*> & paramsInfo,
+		template <class Type> bool equalsIteration(int inputIndex, int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
 			void** dependencies, const Type & param);
 
 		/**
 		recursively iterates through all parameters passed as otherParams and sotres all input parameters into the inputParameters vector
 		and all outputParameters into the outputParameters vector using the paramsInfo vector
 		*/
-		template <class FirstType, class... OtherTypes> void setParamIteration(int paramIndex, const std::vector<ParameterInfo*> & paramsInfo,
+		template <class FirstType, class... OtherTypes> void setParamIteration(int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
 			void** dependencies, const FirstType & firstParam, const OtherTypes &... otherParams);
 
 		/**
 		stops the recursion of setParamIteration
 		*/
-		template <class Type> void setParamIteration(int paramIndex, const std::vector<ParameterInfo*> & paramsInfo,
+		template <class Type> void setParamIteration(int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
 			void** dependencies, const Type & param);
 
 		/**
@@ -68,12 +68,12 @@ namespace CacheSystem
 		if the parameter is an output parameter it takes the corresponding value from the outputParameters vector and copies it into the parameter
 		*/
 		template <class FirstType, class... OtherTypes> void outputIteration(int outputIndex, int paramIndex,
-			const std::vector<ParameterInfo*> & paramsInfo, void** dependencies, FirstType & firstParam, OtherTypes &... otherParams);
+			const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies, FirstType & firstParam, OtherTypes &... otherParams);
 
 		/**
 		stops the recursion of outputIteration
 		*/
-		template <class Type> void outputIteration(int outputIndex, int paramIndex, const std::vector<ParameterInfo*> & paramsInfo,
+		template <class Type> void outputIteration(int outputIndex, int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
 			void** dependencies, Type & param);
 
 		/**
@@ -109,7 +109,7 @@ namespace CacheSystem
 		/**
 		sets all parameters
 		*/
-		template <class... ParamTypes> void setParameters(const std::vector<ParameterInfo*> & paramsInfo, void** dependencies,
+		template <class... ParamTypes> void setParameters(const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies,
 			const ParamTypes &... params)
 		{
 			setParamIteration(0, paramsInfo, dependencies, params...);
@@ -131,7 +131,7 @@ namespace CacheSystem
 		returns true if all the input parameters passed as params are equal to their corresponding values stored in this object,
 		otherwise returns false
 		*/
-		template <class... Types> bool equals(const std::vector<ParameterInfo*> & paramsInfo, void** dependencies, const Types &... params)
+		template <class... Types> bool equals(const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies, const Types &... params)
 		{
 			return equalsIteration(0, 0, paramsInfo, dependencies, params...);
 		}
@@ -139,7 +139,7 @@ namespace CacheSystem
 		/**
 		copies all values that are stored in this object as output values into the corresponding parameters passed as params
 		*/
-		template <class... Types> void setOutput(const std::vector<ParameterInfo*> & paramsInfo, void** dependencies, const Types &... params)
+		template <class... Types> void setOutput(const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies, const Types &... params)
 		{
 			outputIteration(0, 0, paramsInfo, dependencies, params...);
 		}
@@ -156,10 +156,10 @@ namespace CacheSystem
 	};
 
 	template <class FirstType, class... OtherTypes>
-	bool CacheData::equalsIteration(int inputIndex, int paramIndex, const std::vector<ParameterInfo*> & paramsInfo, void** dependencies,
+	bool CacheData::equalsIteration(int inputIndex, int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies,
 		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{
-		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex];
+		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex].get();
 		if (info->paramType == ParameterType::InputParam)
 		{
 			TypedValue<FirstType>* value = (TypedValue<FirstType>*)inputParameters[inputIndex];
@@ -175,10 +175,10 @@ namespace CacheSystem
 	}
 
 	template <class Type>
-	bool CacheData::equalsIteration(int inputIndex, int paramIndex, const std::vector<ParameterInfo*> & paramsInfo,
+	bool CacheData::equalsIteration(int inputIndex, int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
 		void** dependencies, const Type & param)
 	{
-		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex];
+		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex].get();
 		if (info->paramType == ParameterType::InputParam)
 		{
 			TypedValue<Type>* value = (TypedValue<Type>*)inputParameters[inputIndex];
@@ -189,10 +189,10 @@ namespace CacheSystem
 	}
 
 	template <class FirstType, class... OtherTypes>
-	void CacheData::setParamIteration(int paramIndex, const std::vector<ParameterInfo*> & paramsInfo, void** dependencies,
+	void CacheData::setParamIteration(int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies,
 		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{
-		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex];
+		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex].get();
 		switch (info->paramType)
 		{
 		case ParameterType::InputParam:
@@ -205,9 +205,9 @@ namespace CacheSystem
 	}
 
 	template <class Type>
-	void CacheData::setParamIteration(int paramIndex, const std::vector<ParameterInfo*> & paramsInfo, void** dependencies, const Type & param)
+	void CacheData::setParamIteration(int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies, const Type & param)
 	{
-		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex];
+		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex].get();
 		switch (info->paramType)
 		{
 		case ParameterType::InputParam:
@@ -219,10 +219,10 @@ namespace CacheSystem
 	}
 
 	template <class FirstType, class... OtherTypes>
-	void CacheData::outputIteration(int outputIndex, int paramIndex, const std::vector<ParameterInfo*> & paramsInfo, void** dependencies,
+	void CacheData::outputIteration(int outputIndex, int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies,
 		FirstType & firstParam, OtherTypes &... otherParams)
 	{
-		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex];
+		TypedParameterInfo<FirstType>* info = (TypedParameterInfo<FirstType>*)paramsInfo[paramIndex].get();
 		if (info->paramType == ParameterType::OutputParam)
 		{
 			TypedValue<FirstType>* value = (TypedValue<FirstType>*)outputParameters[outputIndex];
@@ -234,10 +234,10 @@ namespace CacheSystem
 	}
 
 	template <class Type>
-	void CacheData::outputIteration(int outputIndex, int paramIndex, const std::vector<ParameterInfo*> & paramsInfo,
+	void CacheData::outputIteration(int outputIndex, int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
 		void** dependencies, Type & param)
 	{
-		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex];
+		TypedParameterInfo<Type>* info = (TypedParameterInfo<Type>*)paramsInfo[paramIndex].get();
 		if (info->paramType == ParameterType::OutputParam)
 		{
 			TypedValue<Type>* value = (TypedValue<Type>*)outputParameters[outputIndex];

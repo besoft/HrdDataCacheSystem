@@ -1,5 +1,7 @@
 #ifndef _PARAMETER_INFO_H
 #define _PARAMETER_INFO_H
+
+#include <memory>
 #include "ParameterType.h"
 
 namespace CacheSystem
@@ -22,12 +24,12 @@ namespace CacheSystem
 		/**
 		defined only for making the destructor virtual
 		*/
-		virtual ~ParameterInfo(){}
+		virtual ~ParameterInfo() {}
 
 		/**
 		creates a copy
 		*/
-		virtual ParameterInfo* getCopy() = 0;
+		virtual std::shared_ptr<ParameterInfo> getCopy() = 0;
 	};
 }
 

@@ -83,7 +83,7 @@ namespace CacheSystem
 		creates a copy of this object a returns pointer to the new object,
 		it must be deleted by the delete operator in the end
 		*/
-		ParameterInfo* getCopy();
+		std::shared_ptr<ParameterInfo> getCopy();
 	};
 
 	template <class Type>
@@ -113,9 +113,11 @@ namespace CacheSystem
 	}
 
 	template <class Type>
-	ParameterInfo* TypedParameterInfo<Type>::getCopy()
+	std::shared_ptr<ParameterInfo> TypedParameterInfo<Type>::getCopy()
 	{
-		return new TypedParameterInfo<Type>(paramType, equalFunction, initFunction, outputFunction, destroyFunction);
+		return std::shared_ptr<ParameterInfo> (
+			new TypedParameterInfo<Type>(paramType, equalFunction, initFunction, outputFunction, destroyFunction)
+		);
 	}
 }
 

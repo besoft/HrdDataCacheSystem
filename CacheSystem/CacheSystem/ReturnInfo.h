@@ -1,5 +1,7 @@
 #ifndef _RETURN_INFO_H
 #define _RETURN_INFO_H
+
+#include <memory>
 #include "ReturnType.h"
 
 namespace CacheSystem
@@ -27,7 +29,7 @@ namespace CacheSystem
 		/**
 		creates a copy
 		*/
-		virtual ReturnInfo* getCopy() = 0;
+		virtual std::shared_ptr<ReturnInfo> getCopy() = 0;
 	};
 }
 

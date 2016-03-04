@@ -16,12 +16,12 @@ namespace CacheSystem
 		/**
 		contains information about all parametes
 		*/
-		std::vector<ParameterInfo*> paramsInfo;
+		std::vector<std::shared_ptr<ParameterInfo> > paramsInfo;
 
 		/**
 		contains information about the return value
 		*/
-		ReturnInfo* returnInfo;
+		std::shared_ptr<ReturnInfo> returnInfo;
 
 	public:
 		/**
@@ -32,7 +32,10 @@ namespace CacheSystem
 		/**
 		sets information about the return value
 		*/
-		template <class Type> void setReturnInfo(TypedReturnInfo<Type> returnInfo) { this->returnInfo = new TypedReturnInfo<Type>(returnInfo); }
+		template <class Type> void setReturnInfo(TypedReturnInfo<Type> returnInfo)
+		{
+			this->returnInfo = std::shared_ptr<ReturnInfo>(new TypedReturnInfo<Type>(returnInfo));
+		}
 
 		/**
 		creates a clear configuration with no information set
@@ -45,19 +48,14 @@ namespace CacheSystem
 		CacheConfiguration(const CacheConfiguration & conf);
 
 		/**
-		correctly destroys the configuration object
-		*/
-		~CacheConfiguration();
-
-		/**
 		returns a vector containing information about all parameters, the info objects are in the same order as the parameters
 		*/
-		const std::vector<ParameterInfo*> & getParamsInfo() { return paramsInfo; }
+		const std::vector<std::shared_ptr<ParameterInfo> > & getParamsInfo() { return paramsInfo; }
 
 		/**
 		returns information about the return value
 		*/
-		ReturnInfo* getReturnInfo() { return returnInfo; }
+		std::shared_ptr<ReturnInfo> getReturnInfo() { return returnInfo; }
 	};
 
 	template <class Type>
@@ -65,7 +63,7 @@ namespace CacheSystem
 	{
 		while (paramsInfo.size() <= paramIndex)
 			paramsInfo.push_back(nullptr);
-		paramsInfo[paramIndex] = (ParameterInfo*)(new TypedParameterInfo<Type>(paramInfo));
+		paramsInfo[paramIndex] = std::shared_ptr<ParameterInfo>(new TypedParameterInfo<Type>(paramInfo));
 	}
 }
 
