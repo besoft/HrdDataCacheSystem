@@ -6,7 +6,7 @@ namespace CacheSystem
 {
 	namespace StandardFunctions
 	{
-		template <class Type> Type DirectReturn(const Type & value, void**)
+		template <class Type> Type DirectReturn(const Type & value, void*)
 		{
 			throw std::exception("Function DirectReturn cannot be called, it serves only as a constant for comparing.");
 		}

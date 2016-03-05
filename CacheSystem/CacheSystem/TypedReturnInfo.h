@@ -25,7 +25,7 @@ namespace CacheSystem
 		for objects the body should look like this ('ptr' is the pointer to the memory to initialize, 'value' is the value to use for the initialization):
 		new(ptr)Type(value); //uses copy constructor but can use any constructor and then copy the attributes
 		*/
-		void(*initFunction)(const Type &, Type*, void**);
+		void(*initFunction)(const Type &, Type*, void*);
 
 		/**
 		pointer to a function that defines how the cahced value of the return value will be destroyed
@@ -55,7 +55,7 @@ namespace CacheSystem
 		
 		if set to a CacheSystem::StandardFunctions::DirectReturn<Type> then the value will be returned directly
 		*/
-		Type(*returnFunction)(const Type &, void**);
+		Type(*returnFunction)(const Type &, void*);
 
 		/**
 		creates the object and sets function pointers to standard values and return type to Used
@@ -67,9 +67,9 @@ namespace CacheSystem
 		*/
 		TypedReturnInfo(
 			ReturnType returnType,
-			void(*initFunction)(const Type &, Type*, void**),
+			void(*initFunction)(const Type &, Type*, void*),
 			void(*destroyFunction)(Type &),
-			Type(*returnFunction)(const Type &, void**)
+			Type(*returnFunction)(const Type &, void*)
 			);
 
 		/**
@@ -82,9 +82,9 @@ namespace CacheSystem
 	template <class Type>
 	TypedReturnInfo<Type>::TypedReturnInfo(
 		ReturnType returnType,
-		void(*initFunction)(const Type &, Type*, void**),
+		void(*initFunction)(const Type &, Type*, void*),
 		void(*destroyFunction)(Type &),
-		Type(*returnFunction)(const Type &, void**)
+		Type(*returnFunction)(const Type &, void*)
 		) :
 		ReturnInfo(returnType),
 		initFunction(initFunction),

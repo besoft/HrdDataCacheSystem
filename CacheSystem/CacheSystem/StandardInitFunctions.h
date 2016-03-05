@@ -5,7 +5,7 @@ namespace CacheSystem
 {
 	namespace StandardFunctions
 	{
-		template <class Type> void standardInitFunction(const Type & source, Type* destination, void**)
+		template <class Type> void standardInitFunction(const Type & source, Type* destination, void*)
 		{
 			new(destination)Type(source);
 		}

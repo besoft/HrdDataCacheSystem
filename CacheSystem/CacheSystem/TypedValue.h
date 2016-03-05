@@ -26,7 +26,7 @@ namespace CacheSystem
 		/**
 		initializes the value using the specified initFunction (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void**), void** dependencies, void(*destroyFunction)(Type &));
+		TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*), void* dependencyObject, void(*destroyFunction)(Type &));
 
 		/**
 		correctly destroys the value using the destroyFunction
@@ -40,11 +40,11 @@ namespace CacheSystem
 	};
 
 	template <class Type>
-	TypedValue<Type>::TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void**),
-		void** dependencies, void(*destroyFunction)(Type &))
+	TypedValue<Type>::TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*),
+		void* dependencyObject, void(*destroyFunction)(Type &))
 		: value((Type*)new char[sizeof(Type)]), destroyFunction(destroyFunction)
 	{
-		initFunction(value, this->value, dependencies);
+		initFunction(value, this->value, dependencyObject);
 	}
 
 	template <class Type>

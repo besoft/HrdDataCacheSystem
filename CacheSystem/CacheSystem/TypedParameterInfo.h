@@ -21,7 +21,7 @@ namespace CacheSystem
 
 		the first two parameters are values to compare, the return value must be true if the values are equal and false otherwise
 		*/
-		bool(*equalFunction)(const Type &, const Type &, void**);
+		bool(*equalFunction)(const Type &, const Type &, void*);
 
 		/**
 		pointer to a function that defines how to use the parameter to initialize the cached value of the parameter
@@ -33,7 +33,7 @@ namespace CacheSystem
 		for objects the body should look like this ('ptr' is the pointer to the memory to initialize, 'value' is the value to use for the initialization):
 		new(ptr)Type(value); //uses copy constructor but can use any constructor and then copy the attributes
 		*/
-		void(*initFunction)(const Type &, Type*, void**);
+		void(*initFunction)(const Type &, Type*, void*);
 
 		/**
 		pointer to a function that defines how to copy the cached value of an output parameter into the parameter
@@ -41,7 +41,7 @@ namespace CacheSystem
 		first parameter is the cached value
 		second parameter is the actual parameter into which the function must copy the cached value
 		*/
-		void(*outputFunction)(const Type &, Type &, void**);
+		void(*outputFunction)(const Type &, Type &, void*);
 
 		/**
 		pointer to a function that defines how the cahced value of the parameter will be destroyed
@@ -73,9 +73,9 @@ namespace CacheSystem
 		*/
 		TypedParameterInfo(
 			ParameterType paramType,
-			bool(*equalFunction)(const Type &, const Type &, void**),
-			void(*initFunction)(const Type &, Type*, void**),
-			void(*outputFunction)(const Type &, Type &, void**),
+			bool(*equalFunction)(const Type &, const Type &, void*),
+			void(*initFunction)(const Type &, Type*, void*),
+			void(*outputFunction)(const Type &, Type &, void*),
 			void(*destroyFunction)(Type &)
 			);
 
@@ -99,9 +99,9 @@ namespace CacheSystem
 	template <class Type>
 	TypedParameterInfo<Type>::TypedParameterInfo(
 		ParameterType paramType,
-		bool(*equalFunction)(const Type &, const Type &, void**),
-		void(*initFunction)(const Type &, Type*, void**),
-		void(*outputFunction)(const Type &, Type &, void**),
+		bool(*equalFunction)(const Type &, const Type &, void*),
+		void(*initFunction)(const Type &, Type*, void*),
+		void(*outputFunction)(const Type &, Type &, void*),
 		void(*destroyFunction)(Type &)
 		) :
 		ParameterInfo(paramType),

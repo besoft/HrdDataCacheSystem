@@ -89,6 +89,7 @@
     <ClCompile Include="StandardOutputFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractCachedFunction.h" />
     <ClInclude Include="CacheConfiguration.h" />
     <ClInclude Include="CacheData.h" />
     <ClInclude Include="CacheDataStructure.h" />

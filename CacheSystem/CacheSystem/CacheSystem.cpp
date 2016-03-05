@@ -27,7 +27,24 @@ int* function(int* vector1, int* vector2, int* output)
 	return ret;
 }
 
-void init(int* const & source, int** destination, void**)
+void voidFunction(int* vector1, int* vector2, int* output)
+{
+	cout << "CALLING!" << endl;
+	int* ret = new int[vectorSize];
+	for (int i = 0; i < vectorSize; i++)
+	{
+		ret[i] = vector1[i] + vector2[i];
+	}
+	int sum = 0;
+	for (int i = 0; i < vectorSize; i++)
+	{
+		sum += ret[i];
+	}
+	delete[] ret;
+	*output = sum;
+}
+
+void init(int* const & source, int** destination, void*)
 {
 	new(destination) int*;
 	*destination = new int[vectorSize];
@@ -37,7 +54,7 @@ void init(int* const & source, int** destination, void**)
 	}
 }
 
-void returnInit(int* const & source, int** destination, void**)
+void returnInit(int* const & source, int** destination, void*)
 {
 	new(destination) int*;
 	*destination = new int[vectorSize];
@@ -48,7 +65,7 @@ void returnInit(int* const & source, int** destination, void**)
 	delete[] source;
 }
 
-void outputInit(int* const & source, int** destination, void**)
+void outputInit(int* const & source, int** destination, void*)
 {
 	new(destination) int*;
 	*destination = new int;
@@ -65,7 +82,7 @@ void outputDestroy(int* & value)
 	delete value;
 }
 
-bool equalF(int* const & val1, int* const & val2, void**)
+bool equalF(int* const & val1, int* const & val2, void*)
 {
 	for (int i = 0; i < vectorSize; i++)
 	{
@@ -75,7 +92,7 @@ bool equalF(int* const & val1, int* const & val2, void**)
 	return true;
 }
 
-int* returnF(int* const & retVal, void**)
+int* returnF(int* const & retVal, void*)
 {
 	int* ret = new int[vectorSize];
 	for (int i = 0; i < vectorSize; i++)
@@ -114,6 +131,7 @@ int main()
 	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF));
 
 	CachedFunction<int*, int*, int*, int*> func(conf, function);
+	//CachedFunction<void, int*, int*, int*> func(conf, voidFunction);
 	int t = clock();
 	for (int i = 0; i < count; i++)
 	{
@@ -121,6 +139,7 @@ int main()
 		int index2 = rand() % numOfVectors;
 		int output;
 		int* result = func.call(vectors[index1], vectors[index2], &output);
+		//func.call(vectors[index1], vectors[index2], &output);
 		//int* result = function(vectors[index1], vectors[index2], &output);
 		print(vectors[index1]);
 		print(vectors[index2]);

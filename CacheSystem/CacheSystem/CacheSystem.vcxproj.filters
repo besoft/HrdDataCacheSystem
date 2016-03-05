@@ -89,5 +89,8 @@
     <ClInclude Include="CacheData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AbstractCachedFunction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

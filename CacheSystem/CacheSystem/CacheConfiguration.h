@@ -23,6 +23,11 @@ namespace CacheSystem
 		*/
 		std::shared_ptr<ReturnInfo> returnInfo;
 
+		/**
+		the dependency object that is passed to every function manipulating the cached data
+		*/
+		void* dependencyObject;
+
 	public:
 		/**
 		sets information about a single parameter with a given index
@@ -40,7 +45,7 @@ namespace CacheSystem
 		/**
 		creates a clear configuration with no information set
 		*/
-		CacheConfiguration() : returnInfo(nullptr) {}
+		CacheConfiguration() : returnInfo(nullptr), dependencyObject(nullptr) {}
 
 		/**
 		correctly creates a copy of a given configuration
@@ -56,6 +61,16 @@ namespace CacheSystem
 		returns information about the return value
 		*/
 		std::shared_ptr<ReturnInfo> getReturnInfo() { return returnInfo; }
+
+		/**
+		dependency object setter
+		*/
+		void setDependencyObject(void* dependencyObject) { this->dependencyObject = dependencyObject; }
+
+		/**
+		dependency object getter
+		*/
+		void* getDependencyObject() { return dependencyObject; }
 	};
 
 	template <class Type>

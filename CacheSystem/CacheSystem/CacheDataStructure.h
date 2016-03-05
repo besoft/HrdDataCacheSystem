@@ -23,7 +23,7 @@ namespace CacheSystem
 		finds and returns the CacheData object in which all the input parameters are equal to the corresponding input parameters passed as params
 		*/
 		template <class... Types> std::shared_ptr<CacheData> getCacheData(const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
-			void** dependencies, const Types &... params);
+			void* dependencyObject, const Types &... params);
 
 		/**
 		adds new cache data, the CacheData object must be created by the new operator and it will be deleted during deleting this object
@@ -32,10 +32,10 @@ namespace CacheSystem
 	};
 
 	template <class... Types>
-	std::shared_ptr<CacheData> CacheDataStructure::getCacheData(const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void** dependencies, const Types &... params)
+	std::shared_ptr<CacheData> CacheDataStructure::getCacheData(const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void* dependencyObject, const Types &... params)
 	{
 		for (unsigned int i = 0; i < cacheData.size(); i++)
-			if (cacheData[i]->equals(paramsInfo, dependencies, params...))
+			if (cacheData[i]->equals(paramsInfo, dependencyObject, params...))
 				return cacheData[i];
 		return nullptr;
 	}

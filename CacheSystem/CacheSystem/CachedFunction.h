@@ -1,68 +1,41 @@
 #ifndef _CACHED_FUNCTION_H
 #define _CACHED_FUNCTION_H
 
-#include <memory>
-#include "CacheConfiguration.h"
-#include "CacheDataStructure.h"
+#include "AbstractCachedFunction.h"
+
+/*
+disables warning "not all control paths return a value" for the call method
+in cases when the user sets IgnoredReturn for the return value the call method does not return anything which means it returns an undefined value of the given return type
+the warning is ignored because this can only happen when the user wants it to happen
+for primitive types and pointers, if the user does not use the returned value, this doesn't realy matter
+for objects the IgnoredReturn option should be used with high caution, because it may cause runtime errors due to calling the copy constructor even when the user does not use the returned value
+*/
+#pragma warning(disable : 4715)
 
 namespace CacheSystem
 {
 	/**
 	manages the caching and contains all the cached data
+	this class is for functions with a return value
 	*/
 	template <class ReturnType, class... ParamTypes>
-	class CachedFunction
+	class CachedFunction : public AbstractCachedFunction<ReturnType, ParamTypes...>
 	{
-	private:
-		/**
-		contains configuration for the caching
-		*/
-		CacheConfiguration conf;
-		int numberOfParameters;
-
-		/**
-		contains all cached data
-		*/
-		CacheDataStructure cacheData;
-
-		/**
-		function which is called to create the data to cache
-		the CachedFunction object simply simulates calling this function
-		*/
-		ReturnType(*function)(ParamTypes...);
-
-		/**
-		recursively iterates through all parameters passed as otherParams and counts them, the result is stored into the numberOfParameters
-		*/
-		template <class FirstType, class... OtherTypes> void setNumberOfParameters(int numberOfParameters, const FirstType & firstParam,
-			const OtherTypes &... otherParams)
-		{
-			setNumberOfParameters(numberOfParameters + 1, otherParams...);
-		}
-
-		/**
-		stops the recursion of setNumberOfParameters
-		*/
-		template <class Type> void setNumberOfParameters(int numberOfParameters, const Type & param)
-		{
-			this->numberOfParameters = numberOfParameters + 1;
-		}
-
 	public:
-		/**
-		creates the object, the conf object is copied
-		*/
-		CachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...))
-			: conf(conf), function(function), numberOfParameters(-1) {}
-
-		/**
-		looks into the cache data structure, finds the return value and output parameters which correspond to the given input parameters,
-		the return value is then returned and the output parameters are copied into the actual parameters of this method
-
-		if no data is found, the function is called to create it
-		*/
+		CachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...)) : AbstractCachedFunction(conf, function) {}
 		ReturnType call(ParamTypes... params);
-		template <class... FuncParamTypes> void call(FuncParamTypes... params);
+	};
+
+	/**
+	manages the caching and contains all the cached data
+	this specialization is for functions without a return value (void)
+	*/
+	template <class... ParamTypes>
+	class CachedFunction<void, ParamTypes...> : public AbstractCachedFunction<void, ParamTypes...>
+	{
+	public:
+		CachedFunction(const CacheConfiguration & conf, void(*function)(ParamTypes...)) : AbstractCachedFunction(conf, function) {}
+		void call(ParamTypes... params);
 	};
 
 	template <class ReturnType, class... ParamTypes>
@@ -70,30 +43,40 @@ namespace CacheSystem
 	{
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
-		std::shared_ptr<CacheData> data = cacheData.getCacheData(conf.getParamsInfo(), nullptr, params...);
+		std::shared_ptr<CacheData> data = cacheData.getCacheData(conf.getParamsInfo(), conf.getDependencyObject(), params...);
 		if (data == nullptr)
 		{
 			data = std::shared_ptr<CacheData>(new CacheData);
-			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get(), nullptr, function(params...));
-			data->setParameters(conf.getParamsInfo(), nullptr, params...);
+			ReturnType returnValue = function(params...);
+			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get(), conf.getDependencyObject(), returnValue);
+			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);
 			cacheData.addCacheData(data);
 		}
-		data->setOutput(conf.getParamsInfo(), nullptr, params...);
+		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);
 		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get();
 		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
 		{
- 			ReturnType(*returnFunction)(const ReturnType &, void**) = returnInfo->returnFunction;
+ 			ReturnType(*returnFunction)(const ReturnType &, void*) = returnInfo->returnFunction;
 			if (returnFunction == StandardFunctions::DirectReturn<ReturnType>)
 				return ((TypedValue<ReturnType>*)data->getReturnValue())->getValue();
-			return returnFunction(((TypedValue<ReturnType>*)data->getReturnValue())->getValue(), nullptr);
+			return returnFunction(((TypedValue<ReturnType>*)data->getReturnValue())->getValue(), conf.getDependencyObject());
 		}
 	}
 
-	template <class ReturnType, class... ParamTypes>
-	template <class... FuncParamTypes>
-	void CachedFunction<ReturnType, ParamTypes...>::call(FuncParamTypes... params)
+	template <class... ParamTypes>
+	void CachedFunction<void, ParamTypes...>::call(ParamTypes... params)
 	{
-		std::cout << "VOID!!!!!!" << std::endl;
+		if (numberOfParameters == -1)
+			setNumberOfParameters(0, params...);
+		std::shared_ptr<CacheData> data = cacheData.getCacheData(conf.getParamsInfo(), conf.getDependencyObject(), params...);
+		if (data == nullptr)
+		{
+			data = std::shared_ptr<CacheData>(new CacheData);
+			function(params...);
+			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);
+			cacheData.addCacheData(data);
+		}
+		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);
 	}
 }
 
