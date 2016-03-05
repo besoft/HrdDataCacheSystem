@@ -2,6 +2,7 @@
 #define _ABSTRACT_CACHED_FUNCTION_H
 
 #include <memory>
+#include <windows.h>
 #include "CacheConfiguration.h"
 #include "CacheDataStructure.h"
 
@@ -19,12 +20,26 @@ namespace CacheSystem
 		contains configuration for the caching
 		*/
 		CacheConfiguration conf;
+
+		/**
+		number of parameters of the function
+		*/
 		int numberOfParameters;
+
+		/**
+		after the call method is called the value on the given adress is set to true if the data on the output are stored in cache, otherwise it is set to false
+		*/
+		bool* dataInCacheIndicator;
 
 		/**
 		contains all cached data
 		*/
 		CacheDataStructure cacheData;
+
+		/**
+		ticks per millisecond
+		*/
+		int64_t cpuTicksPerMs;
 
 		/**
 		function which is called to create the data to cache
@@ -54,7 +69,11 @@ namespace CacheSystem
 		creates the object, the conf object is copied
 		*/
 		AbstractCachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...))
-			: conf(conf), function(function), numberOfParameters(-1) {}
+			: conf(conf), function(function), numberOfParameters(-1)
+		{
+			QueryPerformanceFrequency((LARGE_INTEGER*)&cpuTicksPerMs);
+			cpuTicksPerMs /= 1000;
+		}
 
 		/**
 		looks into the cache data structure, finds the return value and output parameters which correspond to the given input parameters,
@@ -63,6 +82,13 @@ namespace CacheSystem
 		if no data is found, the function is called to create it
 		*/
 		virtual ReturnType call(ParamTypes... params) = 0;
+
+		/**
+		sets the "data in cache indicator"
+		after the call method is called the value on the given adress is set to true if the data on the output are stored in cache, otherwise it is set to false
+		the pointer can be reset before each call
+		*/
+		void setDataInCacheIndicator(bool* ptr) { dataInCacheIndicator = ptr; }
 	};
 }
 

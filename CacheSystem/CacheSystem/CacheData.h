@@ -1,6 +1,8 @@
 #ifndef _CACHE_DATA_H
 #define _CACHE_DATA_H
+
 #include <vector>
+#include <stdint.h>
 #include "TypedValue.h"
 #include "ParameterType.h"
 #include "ParameterInfo.h"
@@ -29,6 +31,12 @@ namespace CacheSystem
 		contains the return value
 		*/
 		Value* returnValue;
+
+		/**
+		time it took to create the data
+		*/
+		int64_t creationTime;
+
 
 		/**
 		recursively iterates through all parameters passed as otherParams, for each parameter it determines whether it is an input parameter
@@ -148,6 +156,16 @@ namespace CacheSystem
 		returns the return value
 		*/
 		Value* getReturnValue() { return returnValue; }
+
+		/**
+		returns the time it took to create the data
+		*/
+		int64_t getCreationTime() { return creationTime; }
+
+		/**
+		sets the time it took to create the data
+		*/
+		void setCreationTime(int64_t creationTime) { this->creationTime = creationTime; }
 
 		/**
 		correctly destroys the object

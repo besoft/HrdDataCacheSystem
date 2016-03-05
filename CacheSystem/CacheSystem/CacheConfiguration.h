@@ -1,6 +1,7 @@
 #ifndef _CACHE_CONFIGURATION_H
 #define _CACHE_CONFIGURATION_H
 #include <vector>
+#include <stdint.h>
 #include "TypedParameterInfo.h"
 #include "ReturnInfo.h"
 #include "TypedReturnInfo.h"
@@ -28,6 +29,11 @@ namespace CacheSystem
 		*/
 		void* dependencyObject;
 
+		/**
+		any data that are created in shorter time will not be cached
+		*/
+		int64_t minimumDataCreationTime;
+
 	public:
 		/**
 		sets information about a single parameter with a given index
@@ -45,7 +51,7 @@ namespace CacheSystem
 		/**
 		creates a clear configuration with no information set
 		*/
-		CacheConfiguration() : returnInfo(nullptr), dependencyObject(nullptr) {}
+		CacheConfiguration() : returnInfo(nullptr), dependencyObject(nullptr), minimumDataCreationTime(0) {}
 
 		/**
 		correctly creates a copy of a given configuration
@@ -71,6 +77,17 @@ namespace CacheSystem
 		dependency object getter
 		*/
 		void* getDependencyObject() { return dependencyObject; }
+
+		/**
+		sets the minimum data creation time
+		any data that are created in shorter time will not be cached
+		*/
+		void setMinimumDataCreationTime(int64_t time) { minimumDataCreationTime = time; }
+
+		/**
+		gets the minimum data creation time
+		*/
+		int64_t getMinimumDataCreationTime() { return minimumDataCreationTime; }
 	};
 
 	template <class Type>
