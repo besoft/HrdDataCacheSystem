@@ -1,5 +1,6 @@
 #ifndef _STANDARD_EQUAL_FUNCTION_H
 #define _STANDARD_EQUAL_FUNCTION_H
+
 #include <string>
 #include <exception>
 

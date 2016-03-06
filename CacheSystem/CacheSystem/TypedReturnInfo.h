@@ -1,9 +1,12 @@
 #ifndef _TYPED_RETURN_INFO_H
 #define _TYPED_RETURN_INFO_H
+
+#include <stdint.h>
 #include "ReturnInfo.h"
 #include "StandardReturnFunctions.h"
 #include "StandardInitFunctions.h"
 #include "StandardDestroyFunctions.h"
+#include "StandardGetSizeFunctions.h"
 #include "ReturnType.h"
 
 namespace CacheSystem
@@ -46,7 +49,7 @@ namespace CacheSystem
 		but do not do this:
 		delete &value; //the memory is delocated automatically
 		*/
-		void(*destroyFunction)(Type &);
+		void(*destroyFunction)(Type &, void*);
 
 		/**
 		pointer to a function that defines how the cached return value will be returned by the cache system
@@ -56,6 +59,11 @@ namespace CacheSystem
 		if set to a CacheSystem::StandardFunctions::DirectReturn<Type> then the value will be returned directly
 		*/
 		Type(*returnFunction)(const Type &, void*);
+
+		/**
+		pointer to a function that defines how a size of the parameter is calculated
+		*/
+		uint64_t(*getSizeFunction)(const Type &, void*);
 
 		/**
 		creates the object and sets function pointers to standard values and return type to Used
@@ -68,8 +76,9 @@ namespace CacheSystem
 		TypedReturnInfo(
 			ReturnType returnType,
 			void(*initFunction)(const Type &, Type*, void*),
-			void(*destroyFunction)(Type &),
-			Type(*returnFunction)(const Type &, void*)
+			void(*destroyFunction)(Type &, void*),
+			Type(*returnFunction)(const Type &, void*),
+			uint64_t(*getSizeFunction)(const Type &, void*)
 			);
 
 		/**
@@ -83,13 +92,15 @@ namespace CacheSystem
 	TypedReturnInfo<Type>::TypedReturnInfo(
 		ReturnType returnType,
 		void(*initFunction)(const Type &, Type*, void*),
-		void(*destroyFunction)(Type &),
-		Type(*returnFunction)(const Type &, void*)
+		void(*destroyFunction)(Type &, void*),
+		Type(*returnFunction)(const Type &, void*),
+		uint64_t(*getSizeFunction)(const Type &, void*)
 		) :
 		ReturnInfo(returnType),
 		initFunction(initFunction),
 		destroyFunction(destroyFunction),
-		returnFunction(returnFunction)
+		returnFunction(returnFunction),
+		getSizeFunction(getSizeFunction)
 	{
 	}
 
@@ -98,7 +109,8 @@ namespace CacheSystem
 		ReturnInfo(ReturnType::UsedReturn),
 		initFunction(StandardFunctions::standardInitFunction<Type>),
 		destroyFunction(StandardFunctions::standardDestroyFunction<Type>),
-		returnFunction(StandardFunctions::DirectReturn)
+		returnFunction(StandardFunctions::DirectReturn<Type>),
+		getSizeFunction(StandardFunctions::standardGetSizeFunction<Type>)
 	{
 	}
 
@@ -106,7 +118,7 @@ namespace CacheSystem
 	std::shared_ptr<ReturnInfo> TypedReturnInfo<Type>::getCopy()
 	{
 		return std::shared_ptr<ReturnInfo>(
-			new TypedReturnInfo<Type>(returnType, initFunction, destroyFunction, returnFunction)
+			new TypedReturnInfo<Type>(returnType, initFunction, destroyFunction, returnFunction, getSizeFunction)
 		);
 	}
 }

@@ -72,12 +72,12 @@ void outputInit(int* const & source, int** destination, void*)
 	**destination = *source;
 }
 
-void destroy(int* & value)
+void destroy(int* & value, void*)
 {
 	delete[] value;
 }
 
-void outputDestroy(int* & value)
+void outputDestroy(int* & value, void*)
 {
 	delete value;
 }
@@ -90,6 +90,26 @@ bool equalF(int* const & val1, int* const & val2, void*)
 			return false;
 	}
 	return true;
+}
+
+uint32_t hashFunction(int* const & value, void*)
+{
+	uint32_t hash = 0;
+	for (int i = 0; i < vectorSize; i++)
+	{
+		hash += value[i];
+	}
+	return hash;
+}
+
+uint64_t getSize(int* const & value, void*)
+{
+	return sizeof(value) + sizeof(int) * vectorSize;
+}
+
+uint64_t outputGetSize(int* const & value, void*)
+{
+	return sizeof(value) + sizeof(int);
 }
 
 int* returnF(int* const & retVal, void*)
@@ -135,13 +155,13 @@ int main()
 
 	CacheConfiguration conf;
 	conf.setMinimumDataCreationTime(2);
-	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy));
-	conf.setParamInfo(1, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy));
-	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy));
-	//conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF));
+	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
+	conf.setParamInfo(1, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
+	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy, nullptr, outputGetSize));
+	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF, getSize));
 
-	//CachedFunction<int*, int*, int*, int*> func(conf, function);
-	CachedFunction<void, int*, int*, int*> func(conf, voidFunction);
+	CachedFunction<int*, int*, int*, int*> func(conf, function);
+	//CachedFunction<void, int*, int*, int*> func(conf, voidFunction);
 	int t = clock();
 	for (int i = 0; i < count; i++)
 	{
@@ -150,16 +170,16 @@ int main()
 		int output;
 		bool stored;
 		func.setDataInCacheIndicator(&stored);
-		//int* result = func.call(vectors[index1], vectors[index2], &output);
-		func.call(vectors[index1], vectors[index2], &output);
+		int* result = func.call(vectors[index1], vectors[index2], &output);
+		//func.call(vectors[index1], vectors[index2], &output);
 		cout << "Stored: " << stored << endl;
 		//int* result = function(vectors[index1], vectors[index2], &output);
 		print(vectors[index1]);
 		print(vectors[index2]);
-		//print(result);
+		print(result);
 		cout << output << endl;
 		cout << "-------------------------------------" << endl;
-		//delete[] result;
+		delete[] result;
 	}
 	t = clock() - t;
 	cout << "Time: " << t;

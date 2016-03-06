@@ -5,7 +5,7 @@ namespace CacheSystem
 {
 	namespace StandardFunctions
 	{
-		template <class Type> void standardDestroyFunction(Type & instance)
+		template <class Type> void standardDestroyFunction(Type & instance, void* dependencyObject)
 		{
 			instance.~Type();
 		}

@@ -1,11 +1,15 @@
 #ifndef _TYPED_PARAMETER_INFO_H
 #define _TYPED_PARAMETER_INFO_H
+
+#include <stdint.h>
 #include "ParameterInfo.h"
 #include "ParameterType.h"
 #include "StandardInitFunctions.h"
 #include "StandardEqualFunctions.h"
 #include "StandardDestroyFunctions.h"
 #include "StandardOutputFunctions.h"
+#include "StandardHashFunctions.h"
+#include "StandardGetSizeFunctions.h"
 
 namespace CacheSystem
 {
@@ -61,7 +65,17 @@ namespace CacheSystem
 		but do not do this:
 		delete &value; //the memory is delocated automatically
 		*/
-		void(*destroyFunction)(Type &);
+		void(*destroyFunction)(Type &, void*);
+
+		/**
+		pointer to a function that defines how a hash value of the parameter is calculated
+		*/
+		uint32_t(*hashFunction)(const Type &, void*);
+
+		/**
+		pointer to a function that defines how a size of the parameter is calculated
+		*/
+		uint64_t(*getSizeFunction)(const Type &, void*);
 
 		/**
 		creates the object and sets function pointers to standard values and parameter type to Input
@@ -76,7 +90,9 @@ namespace CacheSystem
 			bool(*equalFunction)(const Type &, const Type &, void*),
 			void(*initFunction)(const Type &, Type*, void*),
 			void(*outputFunction)(const Type &, Type &, void*),
-			void(*destroyFunction)(Type &)
+			void(*destroyFunction)(Type &, void*),
+			uint32_t(*hashFunction)(const Type &, void*),
+			uint64_t(*getSizeFunction)(const Type &, void*)
 			);
 
 		/**
@@ -92,7 +108,9 @@ namespace CacheSystem
 		equalFunction(StandardFunctions::standardEqualFunction<Type>),
 		initFunction(StandardFunctions::standardInitFunction<Type>),
 		outputFunction(StandardFunctions::standardOutputFunction<Type>),
-		destroyFunction(StandardFunctions::standardDestroyFunction<Type>)
+		destroyFunction(StandardFunctions::standardDestroyFunction<Type>),
+		hashFunction(StandardFunctions::standardHashFunction<Type>),
+		getSizeFunction(StandardFunctions::standardGetSizeFunction<Type>)
 	{
 	}
 
@@ -102,13 +120,17 @@ namespace CacheSystem
 		bool(*equalFunction)(const Type &, const Type &, void*),
 		void(*initFunction)(const Type &, Type*, void*),
 		void(*outputFunction)(const Type &, Type &, void*),
-		void(*destroyFunction)(Type &)
+		void(*destroyFunction)(Type &, void*),
+		uint32_t(*hashFunction)(const Type &, void*),
+		uint64_t(*getSizeFunction)(const Type &, void*)
 		) :
 		ParameterInfo(paramType),
 		equalFunction(equalFunction),
 		initFunction(initFunction),
 		outputFunction(outputFunction),
-		destroyFunction(destroyFunction)
+		destroyFunction(destroyFunction),
+		hashFunction(hashFunction),
+		getSizeFunction(getSizeFunction)
 	{
 	}
 
@@ -116,7 +138,7 @@ namespace CacheSystem
 	std::shared_ptr<ParameterInfo> TypedParameterInfo<Type>::getCopy()
 	{
 		return std::shared_ptr<ParameterInfo> (
-			new TypedParameterInfo<Type>(paramType, equalFunction, initFunction, outputFunction, destroyFunction)
+			new TypedParameterInfo<Type>(paramType, equalFunction, initFunction, outputFunction, destroyFunction, hashFunction, getSizeFunction)
 		);
 	}
 }

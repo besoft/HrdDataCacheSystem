@@ -20,13 +20,18 @@ namespace CacheSystem
 		/**
 		pointer to a function which defines how to destroy the value (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		void(*destroyFunction)(Type &);
+		void(*destroyFunction)(Type &, void*);
+
+		/**
+		pointer to the dependecy object
+		*/
+		void* dependencyObject;
 
 	public:
 		/**
 		initializes the value using the specified initFunction (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*), void* dependencyObject, void(*destroyFunction)(Type &));
+		TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*), void* dependencyObject, void(*destroyFunction)(Type &, void*));
 
 		/**
 		correctly destroys the value using the destroyFunction
@@ -41,8 +46,8 @@ namespace CacheSystem
 
 	template <class Type>
 	TypedValue<Type>::TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*),
-		void* dependencyObject, void(*destroyFunction)(Type &))
-		: value((Type*)new char[sizeof(Type)]), destroyFunction(destroyFunction)
+		void* dependencyObject, void(*destroyFunction)(Type &, void*))
+		: value((Type*)new char[sizeof(Type)]), destroyFunction(destroyFunction), dependencyObject(dependencyObject)
 	{
 		initFunction(value, this->value, dependencyObject);
 	}
@@ -50,7 +55,7 @@ namespace CacheSystem
 	template <class Type>
 	TypedValue<Type>::~TypedValue()
 	{
-		destroyFunction(*value);
+		destroyFunction(*value, dependencyObject);
 		delete[] ((char*)value);
 	}
 }
