@@ -2,7 +2,7 @@
 
 namespace CacheSystem
 {
-	void CacheDataStructure::addCacheData(std::shared_ptr<CacheData> data)
+	void CacheDataStructure::addCacheData(uint64_t hash, std::shared_ptr<CacheData> data)
 	{
 		cacheData.push_back(data);
 	}

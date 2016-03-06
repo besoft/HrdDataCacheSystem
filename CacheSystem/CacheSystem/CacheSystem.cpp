@@ -10,10 +10,10 @@ using namespace CacheSystem;
 using namespace std;
 
 const int vectorSize = 5;
-int* function(int* vector1, int* vector2, int* output)
+int* function(int* const & vector1, int* const & vector2, int* & output)
 {
 	cout << "CALLING!" << endl;
-	int* ret = new int[vectorSize];
+	int* const ret = new int[vectorSize];
 	for (int i = 0; i < vectorSize; i++)
 	{
 		ret[i] = vector1[i] + vector2[i];
@@ -160,7 +160,7 @@ int main()
 	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy, nullptr, outputGetSize));
 	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF, getSize));
 
-	CachedFunction<int*, int*, int*, int*> func(conf, function);
+	CachedFunction<int*, int* const &, int* const &, int* &> func(conf, function);
 	//CachedFunction<void, int*, int*, int*> func(conf, voidFunction);
 	int t = clock();
 	for (int i = 0; i < count; i++)
@@ -168,9 +168,10 @@ int main()
 		int index1 = rand() % numOfVectors;
 		int index2 = rand() % numOfVectors;
 		int output;
+		int* outputPtr = &output;
 		bool stored;
 		func.setDataInCacheIndicator(&stored);
-		int* result = func.call(vectors[index1], vectors[index2], &output);
+		int* result = func.call(vectors[index1], vectors[index2], outputPtr);
 		//func.call(vectors[index1], vectors[index2], &output);
 		cout << "Stored: " << stored << endl;
 		//int* result = function(vectors[index1], vectors[index2], &output);

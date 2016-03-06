@@ -2,7 +2,6 @@
 #define _CACHED_FUNCTION_H
 
 #include <chrono>
-#include <stdint.h>
 #include "AbstractCachedFunction.h"
 
 /*
@@ -48,7 +47,8 @@ namespace CacheSystem
 	{
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
-		std::shared_ptr<CacheData> data = cacheData.getCacheData(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //find data for given input
+		uint64_t hash = calculateHash(0, 0, params...);
+		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);  //find data for given input
 		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get();
 		if (data == nullptr) //if there are no data for given input
 		{
@@ -67,7 +67,7 @@ namespace CacheSystem
 			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get(), conf.getDependencyObject(), returnValue);  //copies the return value into the data object
 			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //copies the parameters into the data object
 			data->setCreationTime(creationTime);
-			cacheData.addCacheData(data);
+			cacheData.addCacheData(hash, data);
 		}
 		if (dataInCacheIndicator != nullptr)
 			*dataInCacheIndicator = true;  //the data is stored
@@ -89,7 +89,8 @@ namespace CacheSystem
 	{
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
-		std::shared_ptr<CacheData> data = cacheData.getCacheData(conf.getParamsInfo(), conf.getDependencyObject(), params...);
+		uint64_t hash = calculateHash(0, 0, params...);
+		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);
 		if (data == nullptr) //if there are no data for given input
 		{
 			data = std::shared_ptr<CacheData>(new CacheData);
@@ -106,7 +107,7 @@ namespace CacheSystem
 			}
 			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //copies the parameters into the data object
 			data->setCreationTime(creationTime);
-			cacheData.addCacheData(data);
+			cacheData.addCacheData(hash, data);
 		}
 		if (dataInCacheIndicator != nullptr)
 			*dataInCacheIndicator = true;  //the data is stored

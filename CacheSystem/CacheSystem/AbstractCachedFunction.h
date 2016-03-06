@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <windows.h>
+#include <stdint.h>
 #include "CacheConfiguration.h"
 #include "CacheDataStructure.h"
 
@@ -62,6 +63,37 @@ namespace CacheSystem
 		template <class Type> void setNumberOfParameters(int numberOfParameters, const Type & param)
 		{
 			this->numberOfParameters = numberOfParameters + 1;
+		}
+
+		/**
+		recursively iterates through all parameters passed as otherParams and calculates the hash value of all input parameters
+		*/
+		template <class FirstType, class... OtherTypes> uint64_t calculateHash(int paramIndex, int inputParamIndex, const FirstType & firstParam,
+			const OtherTypes &... otherParams)
+		{
+			uint64_t hash = 0;
+			TypedParameterInfo<FirstType>* paramInfo = (TypedParameterInfo<FirstType>*)conf.getParamsInfo()[paramIndex].get();
+			if (paramInfo->paramType == ParameterType::InputParam)
+			{
+				inputParamIndex++;
+				hash = inputParamIndex * paramInfo->hashFunction(firstParam, conf.getDependencyObject());
+			}
+			return hash + calculateHash(paramIndex + 1, inputParamIndex, otherParams...);
+		}
+
+		/**
+		stops the recursion of calculateHash
+		*/
+		template <class Type> uint64_t calculateHash(int paramIndex, int inputParamIndex, const Type & param)
+		{
+			uint64_t hash = 0;
+			TypedParameterInfo<Type>* paramInfo = (TypedParameterInfo<Type>*)conf.getParamsInfo()[paramIndex].get();
+			if (paramInfo->paramType == ParameterType::InputParam)
+			{
+				inputParamIndex++;
+				hash = inputParamIndex * paramInfo->hashFunction(param, conf.getDependencyObject());
+			}
+			return hash;
 		}
 
 	public:
