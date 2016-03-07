@@ -72,6 +72,7 @@ namespace CacheSystem
 		if (dataInCacheIndicator != nullptr)
 			*dataInCacheIndicator = true;  //the data is stored
 		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output praramters of this method
+		//cout << "Collisions: " << cacheData.maxCollisions << endl;
 		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)  //if return value is not ignored
 		{
 			ReturnType(*returnFunction)(const ReturnType &, void*) = returnInfo->returnFunction;

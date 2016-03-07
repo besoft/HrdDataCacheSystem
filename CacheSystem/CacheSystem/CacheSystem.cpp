@@ -12,7 +12,7 @@ using namespace std;
 const int vectorSize = 5;
 int* function(int* const & vector1, int* const & vector2, int* & output)
 {
-	cout << "CALLING!" << endl;
+	//cout << "CALLING!" << endl;
 	int* const ret = new int[vectorSize];
 	for (int i = 0; i < vectorSize; i++)
 	{
@@ -97,7 +97,7 @@ uint32_t hashFunction(int* const & value, void*)
 	uint32_t hash = 0;
 	for (int i = 0; i < vectorSize; i++)
 	{
-		hash += value[i];
+		hash += value[i] * (i + 1);
 	}
 	return hash;
 }
@@ -131,16 +131,7 @@ void print(int* v)
 
 
 int main()
-{
-	/*chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-	for (int i = 0; i < 3; i++)
-		cout << "Something" << endl;
-	chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
-
-	long long time = chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
-	cout << time << endl;
-	cin.get();*/
-	
+{	
 	const int count = 30;
 	const int numOfVectors = 5;
 	int** vectors = new int*[numOfVectors];
@@ -154,7 +145,7 @@ int main()
 	}
 
 	CacheConfiguration conf;
-	conf.setMinimumDataCreationTime(2);
+	//conf.setMinimumDataCreationTime(2);
 	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
 	conf.setParamInfo(1, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
 	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy, nullptr, outputGetSize));
@@ -174,7 +165,7 @@ int main()
 		int* result = func.call(vectors[index1], vectors[index2], outputPtr);
 		//func.call(vectors[index1], vectors[index2], &output);
 		cout << "Stored: " << stored << endl;
-		//int* result = function(vectors[index1], vectors[index2], &output);
+		//int* result = function(vectors[index1], vectors[index2], outputPtr);
 		print(vectors[index1]);
 		print(vectors[index2]);
 		print(result);

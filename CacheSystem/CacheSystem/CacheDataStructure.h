@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 #include <stdint.h>
 #include "CacheData.h"
 
@@ -15,11 +16,13 @@ namespace CacheSystem
 	{
 	private:
 		/**
-		vector of cached data
+		map of vectors of the data
 		*/
-		std::vector<std::shared_ptr<CacheData> > cacheData;
+		std::unordered_map<uint64_t, std::vector<std::shared_ptr<CacheData> > > cacheData;
+		//std::unordered_map<uint64_t, int> collisions;
 
 	public:
+		//int maxCollisions = 0;
 		/**
 		finds and returns the CacheData object in which all the input parameters are equal to the corresponding input parameters passed as params
 		*/
@@ -36,9 +39,12 @@ namespace CacheSystem
 	std::shared_ptr<CacheData> CacheDataStructure::getCacheData(uint64_t hash, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo,
 		void* dependencyObject, const Types &... params)
 	{
-		for (unsigned int i = 0; i < cacheData.size(); i++)
-			if (cacheData[i]->equals(paramsInfo, dependencyObject, params...))
-				return cacheData[i];
+		if (cacheData.count(hash) == 0)
+			return nullptr;
+		std::vector<std::shared_ptr<CacheData> > & dataVector = cacheData[hash];
+		for (unsigned int i = 0; i < dataVector.size(); i++)
+			if (dataVector[i]->equals(paramsInfo, dependencyObject, params...))
+				return dataVector[i];
 		return nullptr;
 	}
 }
