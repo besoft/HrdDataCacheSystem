@@ -101,7 +101,7 @@ namespace CacheSystem
 		creates the object, the conf object is copied
 		*/
 		AbstractCachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...))
-			: conf(conf), function(function), numberOfParameters(-1)
+			: conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr)
 		{
 			QueryPerformanceFrequency((LARGE_INTEGER*)&cpuTicksPerMs);
 			cpuTicksPerMs /= 1000;
