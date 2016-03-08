@@ -27,7 +27,7 @@ int* function(int* const & vector1, int* const & vector2, int* & output)
 	return ret;
 }
 
-void voidFunction(int* vector1, int* vector2, int* output)
+void voidFunction(int* const & vector1, int* const & vector2, int* & output)
 {
 	cout << "CALLING!" << endl;
 	int* ret = new int[vectorSize];
@@ -144,15 +144,16 @@ int main()
 		}
 	}
 
+	CachedFunctionManager manager;
 	CacheConfiguration conf;
-	//conf.setMinimumDataCreationTime(2);
+	conf.setMinimumDataCreationTime(2);
 	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
 	conf.setParamInfo(1, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
 	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy, nullptr, outputGetSize));
 	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF, getSize));
 
-	CachedFunction<int*, int* const &, int* const &, int* &> func(conf, function);
-	//CachedFunction<void, int*, int*, int*> func(conf, voidFunction);
+	//CachedFunction<int*, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, function);
+	CachedFunction<void, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, voidFunction);
 	int t = clock();
 	for (int i = 0; i < count; i++)
 	{
@@ -161,17 +162,17 @@ int main()
 		int output;
 		int* outputPtr = &output;
 		bool stored;
-		func.setDataInCacheIndicator(&stored);
-		int* result = func.call(vectors[index1], vectors[index2], outputPtr);
-		//func.call(vectors[index1], vectors[index2], &output);
+		func->setDataInCacheIndicator(&stored);
+		//int* result = func->call(vectors[index1], vectors[index2], outputPtr);
+		func->call(vectors[index1], vectors[index2], outputPtr);
 		cout << "Stored: " << stored << endl;
 		//int* result = function(vectors[index1], vectors[index2], outputPtr);
 		print(vectors[index1]);
 		print(vectors[index2]);
-		print(result);
+		//print(result);
 		cout << output << endl;
 		cout << "-------------------------------------" << endl;
-		delete[] result;
+		//delete[] result;
 	}
 	t = clock() - t;
 	cout << "Time: " << t;

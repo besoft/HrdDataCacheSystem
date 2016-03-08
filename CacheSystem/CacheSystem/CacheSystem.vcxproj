@@ -84,6 +84,7 @@
     <ClCompile Include="CacheConfiguration.cpp" />
     <ClCompile Include="CacheData.cpp" />
     <ClCompile Include="CacheDataStructure.cpp" />
+    <ClCompile Include="CachedFunctionManager.cpp" />
     <ClCompile Include="CacheSystem.cpp" />
     <ClCompile Include="StandardEqualFunctions.cpp" />
     <ClCompile Include="StandardGetSizeFunctions.cpp" />
@@ -96,6 +97,9 @@
     <ClInclude Include="CacheData.h" />
     <ClInclude Include="CacheDataStructure.h" />
     <ClInclude Include="CachedFunction.h" />
+    <ClInclude Include="CachedFunctionDeclaration.h" />
+    <ClInclude Include="CachedFunctionManager.h" />
+    <ClInclude Include="CachedFunctionParent.h" />
     <ClInclude Include="ParameterInfo.h" />
     <ClInclude Include="ReturnInfo.h" />
     <ClInclude Include="ReturnType.h" />

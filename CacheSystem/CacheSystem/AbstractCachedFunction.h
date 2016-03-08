@@ -4,19 +4,30 @@
 #include <memory>
 #include <windows.h>
 #include <stdint.h>
+#include "CachedFunctionParent.h"
 #include "CacheConfiguration.h"
 #include "CacheDataStructure.h"
 
 namespace CacheSystem
 {
 	/**
+	pre-declaration of CacheFunctionManager class
+	*/
+	class CachedFunctionManager;
+	
+	/**
 	manages the caching and contains all the cached data
 	this is an abstract parent for both functions with a return value and functions without a return value (void)
 	*/
 	template <class ReturnType, class... ParamTypes>
-	class AbstractCachedFunction
+	class AbstractCachedFunction : public CachedFunctionParent
 	{
 	protected:
+		/**
+		pointer to the corresponding CachedFunctionManager
+		*/
+		CachedFunctionManager* manager;
+
 		/**
 		contains configuration for the caching
 		*/
@@ -96,17 +107,17 @@ namespace CacheSystem
 			return hash;
 		}
 
-	public:
 		/**
 		creates the object, the conf object is copied
 		*/
-		AbstractCachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...))
-			: conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr)
+		AbstractCachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...), CachedFunctionManager* manager)
+			: conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr), manager(manager)
 		{
 			QueryPerformanceFrequency((LARGE_INTEGER*)&cpuTicksPerMs);
 			cpuTicksPerMs /= 1000;
 		}
 
+	public:
 		/**
 		looks into the cache data structure, finds the return value and output parameters which correspond to the given input parameters,
 		the return value is then returned and the output parameters are copied into the actual parameters of this method

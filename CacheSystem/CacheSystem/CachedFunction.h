@@ -2,7 +2,9 @@
 #define _CACHED_FUNCTION_H
 
 #include <chrono>
-#include "AbstractCachedFunction.h"
+#include "CachedFunctionManager.h"
+#include "CachedFunctionDeclaration.h"
+
 
 /*
 disables warning "not all control paths return a value" for the call method
@@ -15,30 +17,6 @@ for objects the IgnoredReturn option should be used with high caution, because i
 
 namespace CacheSystem
 {
-	/**
-	manages the caching and contains all the cached data
-	this class is for functions with a return value
-	*/
-	template <class ReturnType, class... ParamTypes>
-	class CachedFunction : public AbstractCachedFunction<ReturnType, ParamTypes...>
-	{
-	public:
-		CachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...)) : AbstractCachedFunction(conf, function) {}
-		ReturnType call(ParamTypes... params);
-	};
-
-	/**
-	manages the caching and contains all the cached data
-	this specialization is for functions without a return value (void)
-	*/
-	template <class... ParamTypes>
-	class CachedFunction<void, ParamTypes...> : public AbstractCachedFunction<void, ParamTypes...>
-	{
-	public:
-		CachedFunction(const CacheConfiguration & conf, void(*function)(ParamTypes...)) : AbstractCachedFunction(conf, function) {}
-		void call(ParamTypes... params);
-	};
-
 	/**
 	this method's code is long and ugly but it cannot be simply split into more smaller methods because it would create unnecessary copying of parameters and return value into and from lower levels during calling the methods
 	*/
