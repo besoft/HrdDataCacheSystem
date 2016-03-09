@@ -34,6 +34,11 @@ namespace CacheSystem
 		*/
 		int64_t minimumDataCreationTime;
 
+		/**
+		any data bigger than this will not be cached
+		*/
+		uint64_t maximumDataSize;
+
 	public:
 		/**
 		sets information about a single parameter with a given index
@@ -51,7 +56,7 @@ namespace CacheSystem
 		/**
 		creates a clear configuration with no information set
 		*/
-		CacheConfiguration() : returnInfo(nullptr), dependencyObject(nullptr), minimumDataCreationTime(0) {}
+		CacheConfiguration() : returnInfo(nullptr), dependencyObject(nullptr), minimumDataCreationTime(0), maximumDataSize(UINT64_MAX) {}
 
 		/**
 		correctly creates a copy of a given configuration
@@ -88,6 +93,17 @@ namespace CacheSystem
 		gets the minimum data creation time
 		*/
 		int64_t getMinimumDataCreationTime() { return minimumDataCreationTime; }
+
+		/**
+		sets the maximum data size
+		any data bigger than this will not be cached
+		*/
+		void setMaximumDataSize(uint64_t bytes) { maximumDataSize = bytes; }
+
+		/**
+		gets the maximum data size
+		*/
+		uint64_t getMaximumDataSize() { return maximumDataSize; }
 	};
 
 	template <class Type>

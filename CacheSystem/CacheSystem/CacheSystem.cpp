@@ -144,9 +144,10 @@ int main()
 		}
 	}
 
-	CachedFunctionManager manager;
+	CacheManagerConfiguration managerConf;
+	CachedFunctionManager manager(managerConf);
 	CacheConfiguration conf;
-	conf.setMinimumDataCreationTime(2);
+	//conf.setMinimumDataCreationTime(2);
 	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
 	conf.setParamInfo(1, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));
 	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy, nullptr, outputGetSize));

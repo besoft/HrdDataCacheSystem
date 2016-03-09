@@ -100,6 +100,7 @@
     <ClInclude Include="CachedFunctionDeclaration.h" />
     <ClInclude Include="CachedFunctionManager.h" />
     <ClInclude Include="CachedFunctionParent.h" />
+    <ClInclude Include="CacheManagerConfiguration.h" />
     <ClInclude Include="ParameterInfo.h" />
     <ClInclude Include="ReturnInfo.h" />
     <ClInclude Include="ReturnType.h" />
