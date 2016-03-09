@@ -153,8 +153,8 @@ int main()
 	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy, nullptr, outputGetSize));
 	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF, getSize));
 
-	//CachedFunction<int*, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, function);
-	CachedFunction<void, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, voidFunction);
+	CachedFunction<int*, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, function);
+	//CachedFunction<void, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, voidFunction);
 	int t = clock();
 	for (int i = 0; i < count; i++)
 	{
@@ -164,16 +164,16 @@ int main()
 		int* outputPtr = &output;
 		bool stored;
 		func->setDataInCacheIndicator(&stored);
-		//int* result = func->call(vectors[index1], vectors[index2], outputPtr);
-		func->call(vectors[index1], vectors[index2], outputPtr);
+		int* result = func->call(vectors[index1], vectors[index2], outputPtr);
+		//func->call(vectors[index1], vectors[index2], outputPtr);
 		cout << "Stored: " << stored << endl;
 		//int* result = function(vectors[index1], vectors[index2], outputPtr);
 		print(vectors[index1]);
 		print(vectors[index2]);
-		//print(result);
+		print(result);
 		cout << output << endl;
 		cout << "-------------------------------------" << endl;
-		//delete[] result;
+		delete[] result;
 	}
 	t = clock() - t;
 	cout << "Time: " << t;

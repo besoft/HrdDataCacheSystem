@@ -37,6 +37,11 @@ namespace CacheSystem
 		*/
 		int64_t creationTime;
 
+		/**
+		size of the data in cache
+		*/
+		uint64_t size;
+
 
 		/**
 		recursively iterates through all parameters passed as otherParams, for each parameter it determines whether it is an input parameter
@@ -112,7 +117,7 @@ namespace CacheSystem
 		}
 
 	public:
-		CacheData() : returnValue(nullptr) {}
+		CacheData() : returnValue(nullptr), size(0), creationTime(0) {}
 
 		/**
 		sets all parameters
@@ -166,6 +171,16 @@ namespace CacheSystem
 		sets the time it took to create the data
 		*/
 		void setCreationTime(int64_t creationTime) { this->creationTime = creationTime; }
+
+		/**
+		returns size of the data in cache in bytes
+		*/
+		uint64_t getSize() { return size; }
+
+		/**
+		sets size of the data in cache in bytes
+		*/
+		void setSize(uint64_t bytes) { size = bytes; }
 
 		/**
 		correctly destroys the object

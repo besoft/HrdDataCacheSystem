@@ -36,6 +36,9 @@ namespace CacheSystem
 			ReturnType returnValue = function(params...);
 			QueryPerformanceCounter((LARGE_INTEGER*)&t2);
 			int64_t creationTime = (t2 - t1) / cpuTicksPerMs;
+			uint64_t dataSize = calculateSize(0, params...);
+			if (returnInfo->returnType == ReturnType::UsedReturn)
+				dataSize += returnInfo->getSizeFunction(returnValue, conf.getDependencyObject());
 			if (creationTime < conf.getMinimumDataCreationTime())  //if the data were created too quickly
 			{
 				if (dataInCacheIndicator != nullptr)
@@ -45,13 +48,14 @@ namespace CacheSystem
 			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get(), conf.getDependencyObject(), returnValue);  //copies the return value into the data object
 			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //copies the parameters into the data object
 			data->setCreationTime(creationTime);
+			data->setSize(dataSize);
 			cacheData.addCacheData(hash, data);
 		}
 		if (dataInCacheIndicator != nullptr)
 			*dataInCacheIndicator = true;  //the data is stored
 		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output praramters of this method
 		//cout << "Collisions: " << cacheData.maxCollisions << endl;
-		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)  //if return value is not ignored
+		if (returnInfo->returnType == ReturnType::UsedReturn)  //if return value is not ignored
 		{
 			ReturnType(*returnFunction)(const ReturnType &, void*) = returnInfo->returnFunction;
 			if (returnFunction == StandardFunctions::DirectReturn<ReturnType>)
@@ -78,6 +82,7 @@ namespace CacheSystem
 			function(params...);
 			QueryPerformanceCounter((LARGE_INTEGER*)&t2);
 			int64_t creationTime = (t2 - t1) / cpuTicksPerMs;
+			uint64_t dataSize = calculateSize(0, params...);
 			if (creationTime < conf.getMinimumDataCreationTime())  //if the data were created too quickly
 			{
 				if (dataInCacheIndicator != nullptr)
@@ -86,6 +91,7 @@ namespace CacheSystem
 			}
 			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //copies the parameters into the data object
 			data->setCreationTime(creationTime);
+			data->setSize(dataSize);
 			cacheData.addCacheData(hash, data);
 		}
 		if (dataInCacheIndicator != nullptr)

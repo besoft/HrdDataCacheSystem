@@ -108,6 +108,30 @@ namespace CacheSystem
 		}
 
 		/**
+		recursively iterates through all parameters passed as otherParams and calculates the sum of their sizes
+		*/
+		template <class FirstType, class... OtherTypes> uint64_t calculateSize(int paramIndex, const FirstType & firstParam, const OtherTypes &... otherParams)
+		{
+			uint64_t size = 0;
+			TypedParameterInfo<FirstType>* paramInfo = (TypedParameterInfo<FirstType>*)conf.getParamsInfo()[paramIndex].get();
+			if (paramInfo->paramType != ParameterType::IgnoredParam)
+				size += paramInfo->getSizeFunction(firstParam, conf.getDependencyObject());
+			return size + calculateSize(paramIndex + 1, otherParams...);
+		}
+
+		/**
+		stops the recursion of calculateSize
+		*/
+		template <class Type> uint64_t calculateSize(int paramIndex, const Type & param)
+		{
+			uint64_t size = 0;
+			TypedParameterInfo<Type>* paramInfo = (TypedParameterInfo<Type>*)conf.getParamsInfo()[paramIndex].get();
+			if (paramInfo->paramType != ParameterType::IgnoredParam)
+				size += paramInfo->getSizeFunction(param, conf.getDependencyObject());
+			return size;
+		}
+
+		/**
 		creates the object, the conf object is copied
 		*/
 		AbstractCachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...), CachedFunctionManager* manager)

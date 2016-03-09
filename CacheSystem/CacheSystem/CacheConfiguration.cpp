@@ -9,5 +9,6 @@ namespace CacheSystem
 		returnInfo = conf.returnInfo == nullptr ? nullptr : conf.returnInfo->getCopy();
 		minimumDataCreationTime = conf.minimumDataCreationTime;
 		dependencyObject = conf.dependencyObject;
+		maximumDataSize = conf.maximumDataSize;
 	}
 }
