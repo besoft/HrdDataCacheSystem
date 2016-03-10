@@ -12,7 +12,7 @@ using namespace std;
 const int vectorSize = 5;
 int* function(int* const & vector1, int* const & vector2, int* & output)
 {
-	//cout << "CALLING!" << endl;
+	cout << "CALLING!" << endl;
 	int* const ret = new int[vectorSize];
 	for (int i = 0; i < vectorSize; i++)
 	{

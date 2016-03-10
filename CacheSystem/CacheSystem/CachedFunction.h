@@ -39,7 +39,8 @@ namespace CacheSystem
 			uint64_t dataSize = calculateSize(0, params...);
 			if (returnInfo->returnType == ReturnType::UsedReturn)
 				dataSize += returnInfo->getSizeFunction(returnValue, conf.getDependencyObject());
-			if (creationTime < conf.getMinimumDataCreationTime())  //if the data were created too quickly
+			if (creationTime < conf.getMinimumDataCreationTime() ||   //if the data were created too quickly
+				dataSize > conf.getMaximumDataSize() || dataSize > manager->getCacheCapacity())  //or the data is too big
 			{
 				if (dataInCacheIndicator != nullptr)
 					*dataInCacheIndicator = false;  //we do not store the data
@@ -83,7 +84,8 @@ namespace CacheSystem
 			QueryPerformanceCounter((LARGE_INTEGER*)&t2);
 			int64_t creationTime = (t2 - t1) / cpuTicksPerMs;
 			uint64_t dataSize = calculateSize(0, params...);
-			if (creationTime < conf.getMinimumDataCreationTime())  //if the data were created too quickly
+			if (creationTime < conf.getMinimumDataCreationTime() ||  //if the data were created too quickly
+				dataSize > conf.getMaximumDataSize() || dataSize > manager->getCacheCapacity()) //or the data is too big
 			{
 				if (dataInCacheIndicator != nullptr)
 					*dataInCacheIndicator = false;  //we do not store the data

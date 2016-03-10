@@ -20,6 +20,7 @@ namespace CacheSystem
 		uint64_t getSpaceTaken() { return spaceTaken; }
 		bool checkSpace(uint64_t bytes) { return (spaceTaken + bytes) <= conf.getCacheCapacity(); }
 		void takeSpace(uint64_t bytes) { spaceTaken += bytes; }
+		uint64_t getCacheCapacity() { return conf.getCacheCapacity(); }
 
 		template <class ReturnType, class... ParamTypes>
 		CachedFunction<ReturnType, ParamTypes...>* createCachedFunction(CacheConfiguration conf, ReturnType(*function)(ParamTypes...));
