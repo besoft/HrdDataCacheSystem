@@ -19,6 +19,12 @@ namespace CacheSystem
 		...it is called right after the dataCreationEvent method
 		*/
 		virtual void cacheHitEvent(uint64_t dataId, uint64_t dataSize, int64_t dataCreationTime) = 0;
+		
+		/**
+		when a cache hit occurs this method is called for all the data objects in cache except the that was hit
+		to use this method the useCacheMissEvent on CacheManagerConfiguration must be enabled
+		*/
+		virtual void cacheMissEvent(uint64_t dataId, uint64_t dataSize, int64_t dataCreationTime) = 0;
 
 		/**
 		this method is called when any data is supposed to be evicted from cache and priority calculation is needed
@@ -27,15 +33,21 @@ namespace CacheSystem
 		virtual double getPriority(uint64_t dataId, uint64_t dataSize, int64_t dataCreationTime) = 0;
 
 		/**
-		this method is called after the data has been evicted from cache and data with the given dataId no longer exists
+		this method is called right before the data has been evicted from cache
 		*/
 		virtual void dataEvictionEvent(uint64_t dataId) = 0;
 
 	public:
 		void createData(CacheData* data);
 		void hitData(CacheData* data);
+		void missData(CacheData* data);
 		double getDataPriority(CacheData* data);
 		void evictData(CacheData* data);
+
+		/**
+		defined just to make the destructor virtual
+		*/
+		virtual ~CachePolicy() {}
 	};
 }
 

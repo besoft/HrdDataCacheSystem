@@ -5,12 +5,13 @@
 #include "StandardDestroyFunctions.h"
 #include "StandardEqualFunctions.h"
 #include "StandardOutputFunctions.h"
+#include "LFUCachePolicy.h"
 #include <time.h>
 using namespace CacheSystem;
 using namespace std;
 
 const int vectorSize = 5;
-int* function(int* const & vector1, int* const & vector2, int* & output)
+int* const function(int* const & vector1, int* const & vector2, int* & output)
 {
 	cout << "CALLING!" << endl;
 	int* const ret = new int[vectorSize];
@@ -145,6 +146,9 @@ int main()
 	}
 
 	CacheManagerConfiguration managerConf;
+	managerConf.setUseCacheMissEvent(true);
+	managerConf.setCachePolicy(CachePolicies::DefaultCachePolicy());
+	managerConf.setCacheCapacity(500);
 	CachedFunctionManager manager(managerConf);
 	CacheConfiguration conf;
 	//conf.setMinimumDataCreationTime(2);
@@ -153,7 +157,7 @@ int main()
 	conf.setParamInfo(2, TypedParameterInfo<int*>(ParameterType::OutputParam, nullptr, outputInit, StandardFunctions::standardOutputFunction<int*>, outputDestroy, nullptr, outputGetSize));
 	conf.setReturnInfo(TypedReturnInfo<int*>(ReturnType::UsedReturn, returnInit, destroy, returnF, getSize));
 
-	CachedFunction<int*, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, function);
+	CachedFunction<int* const, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, function);
 	//CachedFunction<void, int* const &, int* const &, int* &>* func = manager.createCachedFunction(conf, voidFunction);
 	int t = clock();
 	for (int i = 0; i < count; i++)

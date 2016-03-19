@@ -8,6 +8,7 @@
 #include "ParameterInfo.h"
 #include "ReturnType.h"
 #include "TypedReturnInfo.h"
+#include "CachedFunctionParent.h"
 
 namespace CacheSystem
 {
@@ -41,6 +42,12 @@ namespace CacheSystem
 		size of the data in cache
 		*/
 		uint64_t size;
+
+		void* userData;
+
+		uint64_t hash;
+
+		CachedFunctionParent* cachedFunction;
 
 
 		/**
@@ -117,7 +124,7 @@ namespace CacheSystem
 		}
 
 	public:
-		CacheData() : returnValue(nullptr), size(0), creationTime(0) {}
+		CacheData(CachedFunctionParent* cachedFunction) : returnValue(nullptr), size(0), creationTime(0), cachedFunction(cachedFunction) {}
 
 		/**
 		sets all parameters
@@ -131,12 +138,13 @@ namespace CacheSystem
 		/**
 		sets the return value
 		*/
-		template <class ReturnType> void setReturnValue(TypedReturnInfo<ReturnType>* returnInfo, void* dependencyObject,
+		template <class ReturnType> void setReturnValue(ReturnInfo* returnInfo, void* dependencyObject,
 			const ReturnType & returnValue)
 		{
 			if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
 			{
-				setReturnValue(returnValue, returnInfo->initFunction, dependencyObject, returnInfo->destroyFunction);
+				TypedReturnInfo<ReturnType>* typedReturnInfo = (TypedReturnInfo<ReturnType>*)returnInfo;
+				setReturnValue(returnValue, typedReturnInfo->initFunction, dependencyObject, typedReturnInfo->destroyFunction);
 			}
 		}
 
@@ -181,6 +189,16 @@ namespace CacheSystem
 		sets size of the data in cache in bytes
 		*/
 		void setSize(uint64_t bytes) { size = bytes; }
+
+		void setUserData(void* userData) { this->userData = userData; }
+
+		void* getUserData() { return userData; }
+
+		void setHash(uint64_t hash) { this->hash = hash; }
+
+		uint64_t getHash() { return hash; }
+
+		CachedFunctionParent* getCachedFunction() { return cachedFunction; }
 
 		/**
 		correctly destroys the object

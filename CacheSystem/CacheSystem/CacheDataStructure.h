@@ -19,6 +19,11 @@ namespace CacheSystem
 		map of vectors of the data
 		*/
 		std::unordered_map<uint64_t, std::vector<std::shared_ptr<CacheData> > > cacheData;
+		
+		std::unordered_map<uint64_t, std::vector<std::shared_ptr<CacheData> > >::iterator mapIterator;
+
+		unsigned int listIndex;
+
 		//std::unordered_map<uint64_t, int> collisions;
 
 	public:
@@ -33,6 +38,12 @@ namespace CacheSystem
 		adds new cache data, the CacheData object must be created by the new operator and it will be deleted during deleting this object
 		*/
 		void addCacheData(uint64_t hash, std::shared_ptr<CacheData> data);
+
+		void resetDataIterator();
+
+		CacheData* getNextData();
+
+		void removeData(CacheData* data);
 	};
 
 	template <class... Types>

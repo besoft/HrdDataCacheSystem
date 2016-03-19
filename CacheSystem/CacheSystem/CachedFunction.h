@@ -30,7 +30,7 @@ namespace CacheSystem
 		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get();
 		if (data == nullptr) //if there are no data for given input
 		{
-			data = std::shared_ptr<CacheData>(new CacheData);
+			data = std::shared_ptr<CacheData>(new CacheData(this));
 			int64_t t1, t2;
 			QueryPerformanceCounter((LARGE_INTEGER*)&t1);
 			ReturnType returnValue = function(params...);
@@ -46,14 +46,21 @@ namespace CacheSystem
 					*dataInCacheIndicator = false;  //we do not store the data
 				return returnValue;  //the value is returned directly, even if there is IgnoredReturn set
 			}
-			data->setReturnValue((TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get(), conf.getDependencyObject(), returnValue);  //copies the return value into the data object
+			data->setReturnValue(conf.getReturnInfo().get(), conf.getDependencyObject(), returnValue);  //copies the return value into the data object
 			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //copies the parameters into the data object
 			data->setCreationTime(creationTime);
 			data->setSize(dataSize);
+			data->setHash(hash);
+			if (!manager->checkSpace(dataSize))
+				manager->makeSpace(dataSize);
+			manager->takeSpace(dataSize);
+			manager->getCachePolicy()->createData(data.get());
 			cacheData.addCacheData(hash, data);
 		}
 		if (dataInCacheIndicator != nullptr)
 			*dataInCacheIndicator = true;  //the data is stored
+		manager->getCachePolicy()->hitData(data.get());
+		manager->performCacheMissEvents();
 		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output praramters of this method
 		//cout << "Collisions: " << cacheData.maxCollisions << endl;
 		if (returnInfo->returnType == ReturnType::UsedReturn)  //if return value is not ignored
@@ -77,7 +84,7 @@ namespace CacheSystem
 		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);
 		if (data == nullptr) //if there are no data for given input
 		{
-			data = std::shared_ptr<CacheData>(new CacheData);
+			data = std::shared_ptr<CacheData>(new CacheData(this));
 			int64_t t1, t2;
 			QueryPerformanceCounter((LARGE_INTEGER*)&t1);
 			function(params...);
@@ -94,10 +101,17 @@ namespace CacheSystem
 			data->setParameters(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //copies the parameters into the data object
 			data->setCreationTime(creationTime);
 			data->setSize(dataSize);
+			data->setHash(hash);
+			if (!manager->checkSpace(dataSize))
+				manager->makeSpace(dataSize);
+			manager->takeSpace(dataSize);
+			manager->getCachePolicy()->createData(data.get());
 			cacheData.addCacheData(hash, data);
 		}
 		if (dataInCacheIndicator != nullptr)
 			*dataInCacheIndicator = true;  //the data is stored
+		manager->getCachePolicy()->hitData(data.get());
+		manager->performCacheMissEvents();
 		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output praramters of this method
 	}
 }

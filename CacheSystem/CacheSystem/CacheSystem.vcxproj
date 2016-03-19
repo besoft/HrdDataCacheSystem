@@ -87,6 +87,8 @@
     <ClCompile Include="CachedFunctionManager.cpp" />
     <ClCompile Include="CachePolicy.cpp" />
     <ClCompile Include="CacheSystem.cpp" />
+    <ClCompile Include="DefaultCachePolicy.cpp" />
+    <ClCompile Include="LFUCachePolicy.cpp" />
     <ClCompile Include="StandardEqualFunctions.cpp" />
     <ClCompile Include="StandardGetSizeFunctions.cpp" />
     <ClCompile Include="StandardHashFunctions.cpp" />
@@ -103,6 +105,8 @@
     <ClInclude Include="CachedFunctionParent.h" />
     <ClInclude Include="CacheManagerConfiguration.h" />
     <ClInclude Include="CachePolicy.h" />
+    <ClInclude Include="DefaultCachePolicy.h" />
+    <ClInclude Include="LFUCachePolicy.h" />
     <ClInclude Include="ParameterInfo.h" />
     <ClInclude Include="ReturnInfo.h" />
     <ClInclude Include="ReturnType.h" />

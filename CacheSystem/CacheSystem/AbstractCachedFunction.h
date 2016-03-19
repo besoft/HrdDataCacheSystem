@@ -9,12 +9,8 @@
 #include "CacheDataStructure.h"
 
 namespace CacheSystem
-{
-	/**
-	pre-declaration of CacheFunctionManager class
-	*/
+{	
 	class CachedFunctionManager;
-	
 	/**
 	manages the caching and contains all the cached data
 	this is an abstract parent for both functions with a return value and functions without a return value (void)
@@ -23,11 +19,6 @@ namespace CacheSystem
 	class AbstractCachedFunction : public CachedFunctionParent
 	{
 	protected:
-		/**
-		pointer to the corresponding CachedFunctionManager
-		*/
-		CachedFunctionManager* manager;
-
 		/**
 		contains configuration for the caching
 		*/
@@ -135,7 +126,7 @@ namespace CacheSystem
 		creates the object, the conf object is copied
 		*/
 		AbstractCachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...), CachedFunctionManager* manager)
-			: conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr), manager(manager)
+			: CachedFunctionParent(manager), conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr)
 		{
 			QueryPerformanceFrequency((LARGE_INTEGER*)&cpuTicksPerMs);
 			cpuTicksPerMs /= 1000;
@@ -156,6 +147,12 @@ namespace CacheSystem
 		the pointer can be reset before each call
 		*/
 		void setDataInCacheIndicator(bool* ptr) { dataInCacheIndicator = ptr; }
+
+		void resetDataIterator() { cacheData.resetDataIterator(); }
+
+		CacheData* getNextData() { return cacheData.getNextData(); }
+
+		void removeData(CacheData* data) { cacheData.removeData(data); }
 	};
 }
 

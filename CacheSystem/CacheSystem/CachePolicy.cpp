@@ -12,6 +12,11 @@ namespace CacheSystem
 		cacheHitEvent((uint64_t)data, data->getSize(), data->getCreationTime());
 	}
 
+	void CachePolicy::missData(CacheData* data)
+	{
+		cacheMissEvent((uint64_t)data, data->getSize(), data->getCreationTime());
+	}
+
 	double CachePolicy::getDataPriority(CacheData* data)
 	{
 		return getPriority((uint64_t)data, data->getSize(), data->getCreationTime());
