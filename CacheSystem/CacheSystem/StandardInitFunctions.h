@@ -9,6 +9,12 @@ namespace CacheSystem
 		{
 			new(destination)Type(source);
 		}
+
+		template <> void standardInitFunction(const int &, int*, void*);
+
+		template <> void standardInitFunction(const bool &, bool*, void*);
+
+		template <> void standardInitFunction(const double &, double*, void*);
 	}
 }
 

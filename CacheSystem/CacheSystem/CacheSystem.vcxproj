@@ -92,6 +92,7 @@
     <ClCompile Include="StandardEqualFunctions.cpp" />
     <ClCompile Include="StandardGetSizeFunctions.cpp" />
     <ClCompile Include="StandardHashFunctions.cpp" />
+    <ClCompile Include="StandardInitFunctions.cpp" />
     <ClCompile Include="StandardOutputFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>

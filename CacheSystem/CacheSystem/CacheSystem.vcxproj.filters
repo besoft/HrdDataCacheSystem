@@ -54,6 +54,9 @@
     <ClCompile Include="DefaultCachePolicy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StandardInitFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CacheConfiguration.h">
