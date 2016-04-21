@@ -1,0 +1,20 @@
+->Combo\( 6
+->String\( 4
+->Integer\( 6
+->Float\( 8
+->Double\( 7
+->Bool\( 5
+->BoolGrid\( 7
+->Radio\( 7
+->FileOpen\( 5
+->FileSave\( 5
+->DirOpen\( 4
+->Color\( 4
+->CrossIncremental\( 7
+->TwoButtons\( 6
+->Slider\( 6
+->CheckList\( 4
+->ListBox\( 4
+->Grid\( 6
+->Button\( 4
+->Vector\( 6 7 10

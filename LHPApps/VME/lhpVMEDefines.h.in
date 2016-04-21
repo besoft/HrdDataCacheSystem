@@ -1,0 +1,21 @@
+#ifndef __lhpVMEDefines_h
+#define __lhpVMEDefines_h
+
+#if @LHP_BUILD_DLL@
+# define LHP_SHARED
+#endif
+
+//--------------------------------------------------------------------------
+// For WIN32 dynamic linking
+//--------------------------------------------------------------------------
+#if defined(_WIN32) && defined(LHP_SHARED)
+# if defined(LHP_VME_EXPORTS)
+#  define LHP_VME_EXPORT __declspec( dllexport ) 
+# else
+#  define LHP_VME_EXPORT __declspec( dllimport ) 
+# endif
+#else
+# define LHP_VME_EXPORT
+#endif
+
+#endif // __lhpVMEDefines_h

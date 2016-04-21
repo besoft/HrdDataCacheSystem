@@ -1,0 +1,9 @@
+#ifndef __lhpDefines_h
+#define __lhpDefines_h
+
+//--------------------------------------------------------------------------
+// Data root used to reach data for testing
+//--------------------------------------------------------------------------
+#define LHP_DATA_ROOT "@LHP_DATA_ROOT@"
+
+#endif // __lhpDefines_h

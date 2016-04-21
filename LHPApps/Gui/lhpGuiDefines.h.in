@@ -1,0 +1,21 @@
+#ifndef __lhpGuiDefines_h
+#define __lhpGuiDefines_h
+
+#if @LHP_BUILD_DLL@
+# define I_SHARED
+#endif
+
+//--------------------------------------------------------------------------
+// For WIN32 dynamic linking
+//--------------------------------------------------------------------------
+#if defined(_WIN32) && defined(I_SHARED)
+# if defined(LHP_GUI_EXPORTS)
+#  define LHP_GUI_EXPORT __declspec( dllexport ) 
+# else
+#  define LHP_GUI_EXPORT __declspec( dllimport ) 
+# endif
+#else
+# define LHP_GUI_EXPORT
+#endif
+
+#endif // __lhpGuiDefines_h

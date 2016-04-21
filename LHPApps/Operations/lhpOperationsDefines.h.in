@@ -1,0 +1,21 @@
+#ifndef __lhpOperationsDefines_h
+#define __lhpOperationsDefines_h
+
+#if @LHP_BUILD_DLL@
+# define LHP_SHARED
+#endif
+
+//--------------------------------------------------------------------------
+// For WIN32 dynamic linking
+//--------------------------------------------------------------------------
+#if defined(_WIN32) && defined(LHP_SHARED)
+# if defined(LHP_OPERATIONS_EXPORTS)
+#  define LHP_OPERATIONS_EXPORT __declspec( dllexport ) 
+# else
+#  define LHP_OPERATIONS_EXPORT __declspec( dllimport ) 
+# endif
+#else
+# define LHP_OPERATIONS_EXPORT
+#endif
+
+#endif // __lhpOperationsDefines_h

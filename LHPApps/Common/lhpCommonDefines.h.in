@@ -1,0 +1,21 @@
+#ifndef __lhpCommonDefines_h
+#define __lhpCommonDefines_h
+
+#if @LHP_BUILD_DLL@
+# define LHP_SHARED
+#endif
+
+//--------------------------------------------------------------------------
+// For WIN32 dynamic linking
+//--------------------------------------------------------------------------
+#if defined(_WIN32) && defined(LHP_SHARED)
+# if defined(LHP_COMMON_EXPORTS)
+#  define LHP_COMMON_EXPORT __declspec( dllexport ) 
+# else
+#  define LHP_COMMON_EXPORT __declspec( dllimport ) 
+# endif
+#else
+# define LHP_COMMON_EXPORT
+#endif
+
+#endif // __lhpCommonDefines_h

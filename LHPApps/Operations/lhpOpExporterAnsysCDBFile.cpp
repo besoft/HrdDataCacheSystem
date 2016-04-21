@@ -1,0 +1,491 @@
+/*=========================================================================
+  Program:   Multimod Application Framework
+  Module:    $RCSfile: lhpOpExporterAnsysCDBFile.cpp,v $
+  Language:  C++
+  Date:      $Date: 2010-12-03 14:58:16 $
+  Version:   $Revision: 1.1.1.1.2.3 $
+  Authors:   Gianluigi Crimi
+==========================================================================
+  Copyright (c) 2001/2005 
+  CINECA - Interuniversity Consortium (www.cineca.it)
+=========================================================================*/
+
+#include "mafDefines.h" 
+//----------------------------------------------------------------------------
+// NOTE: Every CPP file in the MAF must include "mafDefines.h" as first.
+// This force to include Window,wxWidgets and VTK exactly in this order.
+// Failing in doing this will result in a run-time error saying:
+// "Failure#0: The value of ESP was not properly saved across a function call"
+//----------------------------------------------------------------------------
+
+#include "lhpUtils.h"
+#include "lhpBuilderDecl.h"
+
+#include "lhpOpExporterAnsysCDBFile.h"
+
+#include "wx/busyinfo.h"
+
+#include "mafDecl.h"
+#include "mafGUI.h"
+
+#include "mafSmartPointer.h"
+#include "mafTagItem.h"
+#include "mafTagArray.h"
+#include "mafVME.h"
+#include "mafVMEMesh.h"
+#include "mafVMEMeshAnsysTextExporter.h"
+#include "mafAbsMatrixPipe.h"
+
+#include <iostream>
+#include <fstream>
+
+// vtk includes
+#include "vtkMAFSmartPointer.h"
+#include "vtkUnstructuredGrid.h"
+#include "vtkCellArray.h"
+#include "vtkDoubleArray.h"
+#include "vtkIntArray.h"
+#include "vtkPointData.h"
+#include "vtkCellData.h"
+#include "vtkFieldData.h"
+#include "vtkTransform.h"
+#include "vtkTransformFilter.h"
+
+// vcl includes
+#include <vcl_map.h>
+#include <vcl_vector.h>
+
+//----------------------------------------------------------------------------
+mafCxxTypeMacro(lhpOpExporterAnsysCDBFile);
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+lhpOpExporterAnsysCDBFile::lhpOpExporterAnsysCDBFile(const wxString &label) :
+lhpOpExporterAnsysCommon(label)
+//----------------------------------------------------------------------------
+{
+
+}
+//----------------------------------------------------------------------------
+lhpOpExporterAnsysCDBFile::~lhpOpExporterAnsysCDBFile()
+//----------------------------------------------------------------------------
+{
+  mafDEL(m_ImportedVmeMesh);
+}
+
+//----------------------------------------------------------------------------
+mafOp* lhpOpExporterAnsysCDBFile::Copy()   
+//----------------------------------------------------------------------------
+{
+  lhpOpExporterAnsysCDBFile *cp = new lhpOpExporterAnsysCDBFile(m_Label);
+  return cp;
+}
+
+//----------------------------------------------------------------------------
+mafString lhpOpExporterAnsysCDBFile::GetWildcard()
+  //----------------------------------------------------------------------------
+{
+  return "cdb files (*.cdb)|*.cdb|All Files (*.*)|*.*";
+}
+
+//---------------------------------------------------------------------------
+int lhpOpExporterAnsysCDBFile::Write()
+//---------------------------------------------------------------------------
+{
+  FILE *outFile;
+  outFile = fopen(m_AnsysOutputFileNameFullPath.c_str(), "w");
+
+  mafVMEMesh *input = mafVMEMesh::SafeDownCast(m_Input);
+
+  input->Update();
+  input->GetUnstructuredGridOutput()->Update();
+  input->GetUnstructuredGridOutput()->GetVTKData()->Update();
+
+  InitProgressBar("Please wait exporting file...");
+
+  // File header
+  WriteHeaderFile(outFile);
+
+  // Nodes
+  // NBLOCK,6,SOLID,   2596567,    25
+  // (3i8,6e20.13)
+  // 209818       0       0-1.1025950600000E+02 1.7403367600000E+02-3.3185662800000E+02
+  // N,R5.3,LOC,       -1,
+    
+  WriteNodesFile(outFile);
+
+  fprintf(outFile,"\n");
+
+  // Elements
+  // EBLOCK,19,SOLID,   3436163,    234932
+  //      1      2      1      1      0      0      0      0     10      0 148775  36953  18415  13487  17834 181600 144602 144605 177182
+  // 177181 144601
+  //     -1
+
+  WriteElementsFile(outFile);
+
+  // Materials
+  // MPTEMP,R5.0, 1, 1,  0.00000000    ,
+  // MPDATA,R5.0, 1,EX  ,       1, 1,  26630.9000    ,
+  // MPTEMP,R5.0, 1, 1,  0.00000000    ,
+  // MPDATA,R5.0, 1,NUXY,       1, 1, 0.300000000    ,
+  // MPTEMP,R5.0, 1, 1,  0.00000000    ,
+  // MPDATA,R5.0, 1,DENS,       1, 1,  1.73281000    ,
+ 
+  WriteMaterialsFile(outFile);
+
+  // End file
+  fprintf(outFile,"\n/GO\nFINISH\n");
+
+  fclose(outFile);
+
+  CloseProgressBar();
+
+  return MAF_OK;
+}
+
+//---------------------------------------------------------------------------
+int lhpOpExporterAnsysCDBFile::WriteHeaderFile(FILE *file)
+  //---------------------------------------------------------------------------
+{
+  time_t rawtime;
+  struct tm * timeinfo;  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+
+  fprintf(file, "!! Generated by lhpOpExporterAnsysCDB %s\n", asctime (timeinfo)); 
+
+  fprintf(file,"/PREP7\n");
+
+  return MAF_OK;
+}
+//---------------------------------------------------------------------------
+int lhpOpExporterAnsysCDBFile::WriteNodesFile(FILE *file)
+//---------------------------------------------------------------------------
+{
+  mafVMEMesh *input = mafVMEMesh::SafeDownCast(m_Input);
+  assert(input);
+
+  vtkUnstructuredGrid *inputUGrid = input->GetUnstructuredGridOutput()->GetUnstructuredGridData();
+
+  vtkIntArray *nodesIDArray = vtkIntArray::SafeDownCast(inputUGrid->GetPointData()->GetArray("id"));
+
+  vtkIntArray *syntheticNodesIDArray = NULL;
+
+  if (nodesIDArray == NULL)
+  {
+    mafLogMessage("nodesID informations not found in vtk unstructured grid!\
+                  Temporary nodes id array will be created in order to export the data.");
+
+    int numPoints = inputUGrid->GetNumberOfPoints();
+    syntheticNodesIDArray = vtkIntArray::New();
+
+    int offset = 1 ;
+    for (int i = 0; i < numPoints; i++) 
+    {
+      syntheticNodesIDArray->InsertNextValue(i + offset);
+    }
+
+    nodesIDArray = syntheticNodesIDArray;
+  }
+
+  assert(nodesIDArray != NULL);
+
+  // get the pointsToBeExported
+  int columnsNumber;
+  int rowsNumber = inputUGrid->GetNumberOfPoints();
+  columnsNumber = 4; // point ID + point coordinates
+
+  vtkPoints *pointsToBeExported = NULL;
+
+  vtkTransform *transform = NULL;
+  vtkTransformFilter *transformFilter = NULL;
+  vtkUnstructuredGrid *inUGDeepCopy = NULL;
+
+  if (m_ABSMatrixFlag)
+  {
+    mafVMEMesh *inMesh = mafVMEMesh::SafeDownCast(m_Input);
+    assert(inMesh);
+
+    vtkMatrix4x4 *matrix = inMesh->GetAbsMatrixPipe()->GetMatrixPointer()->GetVTKMatrix();
+
+    // apply abs matrix to geometry
+    assert(matrix);
+
+    transform = vtkTransform::New();
+    transform->SetMatrix(matrix);
+
+    transformFilter = vtkTransformFilter::New();
+    inUGDeepCopy = vtkUnstructuredGrid::New();
+    inUGDeepCopy->DeepCopy(inputUGrid);
+
+    transformFilter->SetInput(inUGDeepCopy);
+    transformFilter->SetTransform(transform);
+    transformFilter->Update();
+
+    pointsToBeExported = transformFilter->GetOutput()->GetPoints();
+  } 
+  else
+  {
+    // do not transform geometry
+    pointsToBeExported = inputUGrid->GetPoints();
+  }
+
+  // read all the pointsToBeExported in memory (vnl_matrix)
+
+  int pointIDColumn = 0;
+
+  double pointCoordinates[3] = {-9999, -9999, -9999};
+
+  int maxNodeId = nodesIDArray->GetRange()[1];
+
+  char printStr[100];
+  m_IntCharSize = sprintf(printStr,"%d",maxNodeId);
+  
+  fprintf(file,"NBLOCK,6,SOLID,   %d,    %d\n", maxNodeId, rowsNumber);
+  fprintf(file,"(3i%d,6e22.13)\n",m_IntCharSize+1);
+
+ 
+  sprintf(printStr," %%%dd %%%dd %%%dd %%21.13E %%21.13E %%21.13E\n",m_IntCharSize,m_IntCharSize,m_IntCharSize);
+
+  for (int rowID = 0 ; rowID < rowsNumber ; rowID++)
+  {
+    float nodProgress = rowID / m_TotalElements;
+    UpdateProgressBar(nodProgress * 100);
+
+    pointsToBeExported->GetPoint(rowID, pointCoordinates);
+  
+    fprintf(file,printStr, nodesIDArray->GetValue(rowID), 0 , 0, pointCoordinates[0], pointCoordinates[1], pointCoordinates[2]);
+
+  }
+
+  fprintf(file,"N,R5.3,LOC,       -1,\n");
+
+  m_CurrentProgress = rowsNumber;
+
+  // clean up
+  vtkDEL(inUGDeepCopy);
+  vtkDEL(transform);
+  vtkDEL(transformFilter);
+  vtkDEL(syntheticNodesIDArray);
+
+  nodesIDArray = NULL;
+
+  return MAF_OK;
+
+}
+//---------------------------------------------------------------------------
+int lhpOpExporterAnsysCDBFile::WriteMaterialsFile(FILE *file)
+//---------------------------------------------------------------------------
+{
+  mafVMEMesh *input = mafVMEMesh::SafeDownCast(m_Input);
+  assert(input);
+
+  vtkUnstructuredGrid *inputUGrid = input->GetUnstructuredGridOutput()->GetUnstructuredGridData();
+
+  vtkDataArray *materialsIDArray = NULL;
+
+  // try field data
+  materialsIDArray = inputUGrid->GetFieldData()->GetArray("material_id");
+
+  if (materialsIDArray != NULL)
+  {
+    mafLogMessage("Found material array in field data");
+  }
+  else
+  {
+    // try scalars 
+    materialsIDArray = inputUGrid->GetCellData()->GetScalars("material_id");  
+    if (materialsIDArray != NULL)
+    {
+      mafLogMessage("Found material array as active scalar");
+    }
+  }
+
+  if (materialsIDArray != NULL)
+  {
+    // get the number of materials
+    int numberOfMaterials = materialsIDArray->GetNumberOfTuples();
+
+    // get the number of materials properties
+    int numberOfMaterialProperties = inputUGrid->GetFieldData()->GetNumberOfArrays() - 1; // 1 is the materialsIDArray
+
+    vtkFieldData *fieldData = inputUGrid->GetFieldData();
+
+    // gather material properties array names
+    vcl_vector<wxString> materialProperties;
+    for (int arrayID = 0; arrayID < fieldData->GetNumberOfArrays(); arrayID++)
+    {
+      wxString arrayName = fieldData->GetArray(arrayID)->GetName();
+      if (arrayName != "material_id")
+      {
+        materialProperties.push_back(arrayName);
+      }
+    }
+
+    fprintf(file,"\n");
+
+    // For each material
+    for (int i = 0; i < numberOfMaterials; i++)
+    {
+      float matProgress = (m_CurrentProgress + i) / m_TotalElements;
+      UpdateProgressBar(matProgress * 100);
+
+      int materialID = materialsIDArray->GetTuple(i)[0];
+
+      // For each property
+      for (int j = 0; j < numberOfMaterialProperties; j++)
+      {
+        wxString arrayName = materialProperties[j];
+        vtkDataArray *array = fieldData->GetArray(arrayName.c_str());
+
+        fprintf(file,"MPTEMP,R5.0, 1, 1,  0.00000000    ,\n");
+        fprintf(file,"MPDATA,R5.0, 1,%s,     %d, 1, %.8lf    ,",arrayName.c_str(), materialID, array->GetTuple(i)[0]);
+        
+        fprintf(file,"\n");
+      }
+    }  
+
+    m_CurrentProgress += numberOfMaterials;
+  }  
+
+  return MAF_OK;
+}
+//---------------------------------------------------------------------------
+int lhpOpExporterAnsysCDBFile::WriteElementsFile(FILE *file)
+//---------------------------------------------------------------------------
+{
+  mafVMEMesh *input = mafVMEMesh::SafeDownCast(m_Input);
+  assert(input);
+
+  vtkUnstructuredGrid *inputUGrid = input->GetUnstructuredGridOutput()->GetUnstructuredGridData();
+
+  // create elements matrix 
+  int rowsNumber = inputUGrid->GetNumberOfCells();
+
+  // read all the elements with their attribute data in memory (vnl_matrix)
+
+  mafString ansysNODESIDArrayName("id");
+  mafString ansysELEMENTIDArrayName("ANSYS_ELEMENT_ID");
+  mafString ansysTYPEIntArrayName("ANSYS_ELEMENT_TYPE");
+  mafString ansysMATERIALIntArrayName("material"); 
+  mafString ansysREALIntArrayName("ANSYS_ELEMENT_REAL");
+
+  vtkCellData *cellData = inputUGrid->GetCellData();
+  vtkPointData *pointData = inputUGrid->GetPointData();
+
+  // get the ELEMENT_ID array
+  vtkIntArray *elementIdArray = vtkIntArray::SafeDownCast(cellData->GetArray(ansysELEMENTIDArrayName.GetCStr()));
+  
+  // get the Ansys Nodes Id array
+  vtkIntArray *nodesIDArray = vtkIntArray::SafeDownCast(pointData->GetArray(ansysNODESIDArrayName.GetCStr()));  
+    
+  // get the MATERIAL array
+  vtkIntArray *materialArray = vtkIntArray::SafeDownCast(cellData->GetArray(ansysMATERIALIntArrayName.GetCStr()));
+  
+  // get the TYPE array
+  vtkIntArray *typeArray = vtkIntArray::SafeDownCast(cellData->GetArray(ansysTYPEIntArrayName.GetCStr()));
+
+  // get the REAL array
+  vtkIntArray *realArray = vtkIntArray::SafeDownCast(cellData->GetArray(ansysREALIntArrayName.GetCStr()));
+ 
+  ExportElement *exportVector = new ExportElement[rowsNumber];
+
+  int currType=-1;
+
+  for (int rowID = 0 ; rowID < rowsNumber ; rowID++)
+  {
+    exportVector[rowID].elementID = elementIdArray ? elementIdArray->GetValue(rowID) : rowID+1;
+    exportVector[rowID].matID = materialArray ? materialArray->GetValue(rowID) : 1;
+    exportVector[rowID].elementType = typeArray ? typeArray->GetValue(rowID) : 1;
+    exportVector[rowID].elementReal = realArray ? realArray->GetValue(rowID) : 1;
+    exportVector[rowID].cellID=rowID;
+  }
+
+  qsort(exportVector, rowsNumber, sizeof(ExportElement), compareElem);
+
+  for (int rowID = 0 ; rowID < rowsNumber ; rowID++)
+  {
+    if(currType !=  exportVector[rowID].elementType)
+    {
+      int mode;
+    
+      vtkCell *currentCell = inputUGrid->GetCell(exportVector[rowID].cellID);
+      vtkIdList *idList = currentCell->GetPointIds();
+      int cellNpoints=currentCell->GetNumberOfPoints();
+
+      switch (cellNpoints)
+      {
+        case 4:
+        case 8: 
+          mode = 45;
+          break;
+
+        case 10: 
+          mode = 187;
+          break;
+
+        case 20: 
+          mode = 186;
+          break;
+
+        default:
+          mode = -1;
+          break;
+      }
+
+      currType =  exportVector[rowID].elementType;
+      fprintf(file,"ET,%d,%d\n", currType, mode);
+    }
+  }
+
+  int maxElemId = elementIdArray->GetRange()[1];
+
+  // Start EBlock
+  fprintf(file,"\nEBLOCK,19,SOLID,   %d,    %d", maxElemId, rowsNumber);
+  fprintf(file,"\n(19i%d)\n", m_IntCharSize + 1);
+  
+  int currentMatID = -1;
+  int currentType = -1;
+  int currentReal = 1;
+
+  char printStr[100];
+  sprintf(printStr," %%%dd %%%dd %%%dd %%%dd %%%dd %%%dd %%%dd %%%dd %%%dd %%%dd %%%dd",m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize,m_IntCharSize);
+
+  char printStr2[10];
+  sprintf(printStr2," %%%dd",m_IntCharSize);
+
+  for (int rowID = 0 ; rowID < rowsNumber ; rowID++)
+  {
+    float elemProgress = (m_CurrentProgress + (float)rowID) / m_TotalElements;
+    UpdateProgressBar(elemProgress * 100);
+    
+    vtkCell *currentCell = inputUGrid->GetCell(exportVector[rowID].cellID);
+    vtkIdList *idList = currentCell->GetPointIds();
+    int cellNpoints=currentCell->GetNumberOfPoints();
+     
+    currentMatID = exportVector[rowID].matID;
+    currentType = exportVector[rowID].elementType;
+    //currentReal =  exportVector[rowID].elementReal;
+
+    fprintf(file, printStr, currentMatID, currentType, 1,  1,  0,  0,  0,  0, cellNpoints, 0, exportVector[rowID].elementID);
+    
+    for (int currentID = 0; currentID < cellNpoints; currentID++)
+    {
+      if(currentID == 8)  
+        fprintf(file, "\n"); 
+
+      fprintf(file, printStr2,  nodesIDArray->GetValue(idList->GetId(currentID)));
+    }
+
+    fprintf(file, "\n"); 
+  }
+
+  // End EBlock
+  fprintf(file,printStr2, -1);
+
+  delete [] exportVector;
+
+  return MAF_OK;
+}
+
+

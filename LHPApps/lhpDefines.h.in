@@ -1,0 +1,17 @@
+#ifndef __lhpDefines_h
+#define __lhpDefines_h
+
+#include "medDefines.h"
+
+//--------------------------------------------------------------------------
+// Data root used to reach data for testing
+//--------------------------------------------------------------------------
+#define LHP_DATA_ROOT "@LHP_DATA_ROOT@"
+
+#define LHP_SOURCE_DIR "@LHP_SOURCE_DIR@"
+
+#define BONEMAT_COMMON_VERSION @BONEMAT_COMMON_VERSION@
+
+//BES: added for VPHOP_WP10 support
+#define VPHOP_WP10
+#endif // __lhpDefines_h
