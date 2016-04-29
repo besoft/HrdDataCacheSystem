@@ -1,7 +1,6 @@
 #ifndef _CACHED_FUNCTION_H
 #define _CACHED_FUNCTION_H
 
-#include <chrono>
 #include "CachedFunctionManager.h"
 #include "CachedFunctionDeclaration.h"
 

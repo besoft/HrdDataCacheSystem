@@ -138,15 +138,7 @@ namespace CacheSystem
 		/**
 		sets the return value
 		*/
-		template <class ReturnType> void setReturnValue(ReturnInfo* returnInfo, void* dependencyObject,
-			const ReturnType & returnValue)
-		{
-			if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
-			{
-				TypedReturnInfo<ReturnType>* typedReturnInfo = (TypedReturnInfo<ReturnType>*)returnInfo;
-				setReturnValue(returnValue, typedReturnInfo->initFunction, dependencyObject, typedReturnInfo->destroyFunction);
-			}
-		}
+		template <class ReturnType> void setReturnValue(ReturnInfo* returnInfo, void* dependencyObject, const ReturnType & returnValue);
 
 		/**
 		returns true if all the input parameters passed as params are equal to their corresponding values stored in this object,
@@ -205,6 +197,15 @@ namespace CacheSystem
 		*/
 		~CacheData();
 	};
+
+	template <class ReturnType> void CacheData::setReturnValue(ReturnInfo* returnInfo, void* dependencyObject, const ReturnType & returnValue)
+	{
+		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
+		{
+			TypedReturnInfo<ReturnType>* typedReturnInfo = (TypedReturnInfo<ReturnType>*)returnInfo;
+			setReturnValue(returnValue, typedReturnInfo->initFunction, dependencyObject, typedReturnInfo->destroyFunction);
+		}
+	}
 
 	template <class FirstType, class... OtherTypes>
 	bool CacheData::equalsIteration(int inputIndex, int paramIndex, const std::vector<std::shared_ptr<ParameterInfo> > & paramsInfo, void* dependencyObject,

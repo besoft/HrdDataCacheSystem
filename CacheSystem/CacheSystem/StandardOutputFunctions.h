@@ -15,9 +15,17 @@ namespace CacheSystem
 
 		template <> void standardOutputFunction(int* const & storedValuePointer, int* & outputPointer, void*);
 
+		template <> void standardOutputFunction(unsigned int* const & storedValuePointer, unsigned int* & outputPointer, void*);
+
 		template <> void standardOutputFunction(char* const & storedValuePointer, char* & outputPointer, void*);
 
 		template <> void standardOutputFunction(std::string* const & storedValuePointer, std::string* & outputPointer, void*);
+
+		template <> void standardOutputFunction(double* const & storedValuePointer, double* & outputPointer, void*);
+
+		template <> void standardOutputFunction(float* const & storedValuePointer, float* & outputPointer, void*);
+
+		template <> void standardOutputFunction(bool* const & storedValuePointer, bool* & outputPointer, void*);
 	}
 }
 

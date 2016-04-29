@@ -1,11 +1,5 @@
 #include <iostream>
-#include "CacheData.h"
 #include "CachedFunction.h"
-#include "StandardInitFunctions.h"
-#include "StandardDestroyFunctions.h"
-#include "StandardEqualFunctions.h"
-#include "StandardOutputFunctions.h"
-#include "LFUCachePolicy.h"
 #include <time.h>
 using namespace CacheSystem;
 using namespace std;
@@ -145,11 +139,11 @@ int main()
 		}
 	}
 
-	CacheManagerConfiguration managerConf;
-	managerConf.setUseCacheMissEvent(true);
-	managerConf.setCachePolicy(CachePolicies::DefaultCachePolicy());
+	CacheManagerConfiguration managerConf;  //vytvoøení konfiguraèního objektu
+	managerConf.setCachePolicy(CachePolicies::DefaultCachePolicy());  //nastavení politiky
+	managerConf.setUseCacheMissEvent(true);  //nastavení použití cache miss eventu (hodnota R se pøepoèítává pøi každém pøístupu)
 	managerConf.setCacheCapacity(500);
-	CachedFunctionManager manager(managerConf);
+	CachedFunctionManager manager(managerConf);  //vytvoøení manažera
 	CacheConfiguration conf;
 	//conf.setMinimumDataCreationTime(2);
 	conf.setParamInfo(0, TypedParameterInfo<int*>(ParameterType::InputParam, equalF, init, StandardFunctions::standardOutputFunction<int*>, destroy, hashFunction, getSize));

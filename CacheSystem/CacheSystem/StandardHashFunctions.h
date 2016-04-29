@@ -18,9 +18,17 @@ namespace CacheSystem
 
 		template <> uint32_t standardHashFunction(const int & value, void*);
 
+		template <> uint32_t standardHashFunction(const unsigned int & value, void*);
+
 		template <> uint32_t standardHashFunction(const char & value, void*);
 
 		template <> uint32_t standardHashFunction(const std::string & value, void*);
+
+		template <> uint32_t standardHashFunction(const double & value, void*);
+
+		template <> uint32_t standardHashFunction(const float & value, void*);
+
+		template <> uint32_t standardHashFunction(const bool & value, void*);
 	}
 }
 

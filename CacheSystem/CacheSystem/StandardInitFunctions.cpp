@@ -8,6 +8,11 @@ namespace CacheSystem
 		{
 			*destination = source;
 		}
+		
+		template <> void standardInitFunction(const unsigned int & source, unsigned int* destination, void*)
+		{
+			*destination = source;
+		}
 
 		template <> void standardInitFunction(const bool & source, bool* destination, void*)
 		{
@@ -15,6 +20,16 @@ namespace CacheSystem
 		}
 
 		template <> void standardInitFunction(const double & source, double* destination, void*)
+		{
+			*destination = source;
+		}
+
+		template <> void standardInitFunction(const float & source, float* destination, void*)
+		{
+			*destination = source;
+		}
+		
+		template <> void standardInitFunction(const char & source, char* destination, void*)
 		{
 			*destination = source;
 		}
