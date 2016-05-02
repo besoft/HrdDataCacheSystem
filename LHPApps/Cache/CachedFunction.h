@@ -36,7 +36,7 @@ namespace CacheSystem
 			QueryPerformanceCounter((LARGE_INTEGER*)&t2);
 			int64_t creationTime = (t2 - t1) / cpuTicksPerMs;
 			uint64_t dataSize = calculateSize(0, params...);
-			if (returnInfo->returnType == ReturnType::UsedReturn)
+			if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
 				dataSize += returnInfo->getSizeFunction(returnValue, conf.getDependencyObject());
 			if (creationTime < conf.getMinimumDataCreationTime() ||   //if the data were created too quickly
 				dataSize > conf.getMaximumDataSize() || dataSize > manager->getCacheCapacity())  //or the data is too big
@@ -62,7 +62,7 @@ namespace CacheSystem
 		manager->performCacheMissEvents();
 		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output praramters of this method
 		//cout << "Collisions: " << cacheData.maxCollisions << endl;
-		if (returnInfo->returnType == ReturnType::UsedReturn)  //if return value is not ignored
+		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)  //if return value is not ignored
 		{
 			ReturnType(*returnFunction)(const ReturnType &, void*) = returnInfo->returnFunction;
 			if (returnFunction == StandardFunctions::DirectReturn<ReturnType>)
