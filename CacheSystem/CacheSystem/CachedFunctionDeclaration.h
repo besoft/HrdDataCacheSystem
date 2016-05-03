@@ -14,6 +14,11 @@ namespace CacheSystem
 	{
 		friend class CachedFunctionManager;
 	private:
+		/**
+		initializing constructor
+		first parameter is the cache configuration object
+		second parameter is the function for data generating
+		*/
 		CachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...), CachedFunctionManager* manager)
 			: AbstractCachedFunction(conf, function, manager) {}
 
@@ -30,6 +35,11 @@ namespace CacheSystem
 	{
 		friend class CachedFunctionManager;
 	private:
+		/**
+		initializing constructor
+		first parameter is the cache configuration object
+		second parameter is the function for data generating
+		*/
 		CachedFunction(const CacheConfiguration & conf, void(*function)(ParamTypes...), CachedFunctionManager* manager)
 			: AbstractCachedFunction(conf, function, manager) {}
 

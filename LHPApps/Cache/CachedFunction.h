@@ -16,7 +16,7 @@ for objects the IgnoredReturn option should be used with high caution, because i
 
 namespace CacheSystem
 {
-	/**
+	/*
 	this method's code is long and ugly but it cannot be simply split into more smaller methods because it would create unnecessary copying of parameters and return value into and from lower levels during calling the methods
 	*/
 	template <class ReturnType, class... ParamTypes>
@@ -71,7 +71,7 @@ namespace CacheSystem
 		}
 	}
 
-	/**
+	/*
 	this method's code is long and ugly but it cannot be simply split into more smaller methods because it would create unnecessary copying of parameters into lower levels during calling the methods
 	*/
 	template <class... ParamTypes>

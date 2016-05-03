@@ -8,9 +8,15 @@ namespace CacheSystem
 {
 	namespace CachePolicies
 	{
+		/**
+		represents the default cache policy
+		*/
 		class DefaultCachePolicy : public CachePolicy
 		{
 		private:
+			/**
+			represents the information the policy associates with the data objects
+			*/
 			struct PolicyData
 			{
 				double referenceCount;
@@ -19,12 +25,34 @@ namespace CacheSystem
 				double sizeContribution;
 			};
 
+			/**
+			current timestamp
+			*/
 			uint64_t timeStamp;
+
+			/**
+			reference contribution constant
+			*/
 			double referenceContributionConstant;
+
+			/**
+			time contribution constant
+			*/
 			double timeContributionConstant;
+
+			/**
+			size contribution constant
+			*/
 			double sizeContributionConstant;
+
+			/**
+			number of data objects int the cache
+			*/
 			unsigned int dataCount;
 			
+			/**
+			log10(2)
+			*/
 			const double LOG_10_2;
 
 
@@ -58,14 +86,40 @@ namespace CacheSystem
 			void dataEvictionEvent(uint64_t dataId);
 
 		public:
+			/**
+			initializing constructor
+			*/
 			DefaultCachePolicy() : timeStamp(1), sizeContributionConstant(1 / 3.0), timeContributionConstant(1 / 3.0),
 				referenceContributionConstant(1 / 3.0), LOG_10_2(log10(2)), dataCount(0) {}
 
+			/**
+			sets the time contribution constant and adjusts the other two constants so that the sum of all three constants is 1
+			*/
 			void setTimeContributionConstant(double c);
+
+			/**
+			sets the size contribution constant and adjusts the other two constants so that the sum of all three constants is 1
+			*/
 			void setSizeContributionConstant(double c);
+
+			/**
+			sets the reference contribution constant and adjusts the other two constants so that the sum of all three constants is 1
+			*/
 			void setReferenceContributionConstant(double c);
+
+			/**
+			sets the reference contribution constant and the time contribution constant and adjusts the third constant so that the sum of all three constants is 1
+			*/
 			void setReferenceAndTimeContributionConstant(double refC, double timeC);
+
+			/**
+			sets the reference contribution constant and the size contribution constant and adjusts the third constant so that the sum of all three constants is 1
+			*/
 			void setReferenceAndSizeContributionConstant(double refC, double sizeC);
+
+			/**
+			sets the time contribution constant and the size contribution constant and adjusts the third constant so that the sum of all three constants is 1
+			*/
 			void setTimeAndSizeContributionConstant(double timeC, double sizeC);
 		};
 	}

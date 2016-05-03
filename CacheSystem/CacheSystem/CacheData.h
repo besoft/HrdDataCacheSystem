@@ -43,10 +43,20 @@ namespace CacheSystem
 		*/
 		uint64_t size;
 
+		/**
+		user data associated with the data object, it can be anything
+		can be used by the cache policy
+		*/
 		void* userData;
 
+		/**
+		the data object's hash value
+		*/
 		uint64_t hash;
 
+		/**
+		the cache object in which this data object is stored
+		*/
 		CachedFunctionParent* cachedFunction;
 
 
@@ -124,6 +134,10 @@ namespace CacheSystem
 		}
 
 	public:
+		/**
+		initializing constructor
+		the parameter is the cache object in which the data will be stored
+		*/
 		CacheData(CachedFunctionParent* cachedFunction) : returnValue(nullptr), size(0), creationTime(0), cachedFunction(cachedFunction) {}
 
 		/**
@@ -182,14 +196,30 @@ namespace CacheSystem
 		*/
 		void setSize(uint64_t bytes) { size = bytes; }
 
+		/**
+		sets user data associated with the data object, it can be anything
+		can be used by the cache policy
+		*/
 		void setUserData(void* userData) { this->userData = userData; }
 
+		/**
+		returns the user data associated with the data object
+		*/
 		void* getUserData() { return userData; }
 
+		/**
+		sets the hash value of this data object
+		*/
 		void setHash(uint64_t hash) { this->hash = hash; }
 
+		/**
+		returns this object's hash value
+		*/
 		uint64_t getHash() { return hash; }
 
+		/**
+		returns the cache object in which the data object is stored
+		*/
 		CachedFunctionParent* getCachedFunction() { return cachedFunction; }
 
 		/**

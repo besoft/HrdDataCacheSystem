@@ -1,7 +1,6 @@
 #ifndef _ABSTRACT_CACHED_FUNCTION_H
 #define _ABSTRACT_CACHED_FUNCTION_H
 
-#include <memory>
 #include <windows.h>
 #include <stdint.h>
 #include "CachedFunctionParent.h"
@@ -110,10 +109,19 @@ namespace CacheSystem
 		*/
 		void setDataInCacheIndicator(bool* ptr) { dataInCacheIndicator = ptr; }
 
+		/**
+		resets the data structure's iterator to the beginning
+		*/
 		void resetDataIterator() { cacheData.resetDataIterator(); }
 
+		/**
+		returns the next data from the data structure using the data structure's iterator
+		*/
 		CacheData* getNextData() { return cacheData.getNextData(); }
 
+		/**
+		removes given data object from the data structure
+		*/
 		void removeData(CacheData* data) { cacheData.removeData(data); }
 	};
 

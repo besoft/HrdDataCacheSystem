@@ -6,6 +6,9 @@
 
 namespace CacheSystem
 {
+	/**
+	abstract class representing the cache policy
+	*/
 	class CachePolicy
 	{
 	protected:
@@ -38,10 +41,29 @@ namespace CacheSystem
 		virtual void dataEvictionEvent(uint64_t dataId) = 0;
 
 	public:
+		/**
+		calls the dataCreationEvent method for the given data object
+		*/
 		void createData(CacheData* data);
+
+		/**
+		calls the cacheHitEvent method for the given data object
+		*/
 		void hitData(CacheData* data);
+
+		/**
+		calls the cacheMissEvent method for the given data object
+		*/
 		void missData(CacheData* data);
+
+		/**
+		calls the getPriority method for the given data object and returns the value the getPriority method returned
+		*/
 		double getDataPriority(CacheData* data);
+
+		/**
+		calls the dataEvictionEvent method for the given data object
+		*/
 		void evictData(CacheData* data);
 
 		/**

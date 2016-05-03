@@ -20,14 +20,17 @@ namespace CacheSystem
 		*/
 		std::unordered_map<uint64_t, std::vector<std::shared_ptr<CacheData> > > cacheData;
 		
+		/**
+		iterator of the cacheData map
+		*/
 		std::unordered_map<uint64_t, std::vector<std::shared_ptr<CacheData> > >::iterator mapIterator;
 
+		/**
+		iterator for the list that is currently selected by the mapIterator
+		*/
 		unsigned int listIndex;
 
-		//std::unordered_map<uint64_t, int> collisions;
-
 	public:
-		//int maxCollisions = 0;
 		/**
 		finds and returns the CacheData object in which all the input parameters are equal to the corresponding input parameters passed as params
 		*/
@@ -39,10 +42,19 @@ namespace CacheSystem
 		*/
 		void addCacheData(uint64_t hash, std::shared_ptr<CacheData> data);
 
+		/**
+		resets the data iterator
+		*/
 		void resetDataIterator();
 
+		/**
+		returns the next data object using the data iterator
+		*/
 		CacheData* getNextData();
 
+		/**
+		removes given data object
+		*/
 		void removeData(CacheData* data);
 	};
 
