@@ -445,8 +445,7 @@ uint64_t vtkMEDPolyDataDeformationPKCaching::inputGetSize(vtkMEDPolyDataDeformat
 	for (unsigned int i = 0; i < source->GetNumberOfObstacles(); i++)
 		sum += source->GetObstacle(i)->GetActualMemorySize();  //add the size of the obstacle to the sum
 	log("input get size end");
-	//the sum is in kilobytes, so we have to multiply by 1024
-	return sum * 1024;
+	return sum * 1024;  //the sum is in kilobytes so we have to multiply by 1024
 }
 
 void vtkMEDPolyDataDeformationPKCaching::initOutput(vtkMEDPolyDataDeformationPKCaching* const & source, vtkMEDPolyDataDeformationPKCaching** destination, void*)
@@ -454,11 +453,12 @@ void vtkMEDPolyDataDeformationPKCaching::initOutput(vtkMEDPolyDataDeformationPKC
 	log("init output begin");
 	(*destination) = vtkMEDPolyDataDeformationPKCaching::New();  //create new object
 	(*destination)->SetNumberOfMeshes(source->GetNumberOfMeshes());
+	//copy all the meshes
 	for (unsigned int i = 0; i < source->GetNumberOfMeshes(); i++)
 	{
 		vtkPolyData* data = vtkPolyData::New();
 		data->ShallowCopy(source->GetOutputMesh(i));
-		(*destination)->SetOutputMesh(i, data);
+		(*destination)->SetOutputMesh(i, data);  //copy the output mesh
 		data->Delete();
 		data = vtkPolyData::New();
 		if (source->outputMeshesCoarse[i] == nullptr)
@@ -466,7 +466,7 @@ void vtkMEDPolyDataDeformationPKCaching::initOutput(vtkMEDPolyDataDeformationPKC
 		else
 		{
 			data->ShallowCopy(source->outputMeshesCoarse[i]);
-			(*destination)->SetOutputMeshCoarse(i, data);
+			(*destination)->SetOutputMeshCoarse(i, data);  //copy the output coarse mesh
 		}
 		data->Delete();
 	}
@@ -477,13 +477,14 @@ void vtkMEDPolyDataDeformationPKCaching::outputOutput(vtkMEDPolyDataDeformationP
 {
 	log("output output begin");
 	destination->SetNumberOfMeshes(source->GetNumberOfMeshes());
+	//copy all the meshes
 	for (unsigned int i = 0; i < source->GetNumberOfMeshes(); i++)
 	{
 		vtkPolyData* data = vtkPolyData::New();
-		data->DeepCopy(source->GetOutputMesh(i));
+		data->DeepCopy(source->GetOutputMesh(i));  //make a copy of the cached mesh
 		if (destination->GetOutputMesh(i) != nullptr)
 			destination->GetOutputMesh(i)->Delete();
-		destination->SetOutputMesh(i, data);
+		destination->SetOutputMesh(i, data);  //put the copied cached mesh into the output parameter
 		data = vtkPolyData::New();
 		if (source->outputMeshesCoarse[i] == nullptr)
 		{
@@ -493,10 +494,10 @@ void vtkMEDPolyDataDeformationPKCaching::outputOutput(vtkMEDPolyDataDeformationP
 		}
 		else
 		{
-			data->DeepCopy(source->outputMeshesCoarse[i]);
+			data->DeepCopy(source->outputMeshesCoarse[i]);  //make a copy of the cached coarse mesh
 			if (destination->outputMeshesCoarse[i] != nullptr)
 				destination->outputMeshesCoarse[i]->Delete();
-			destination->SetOutputMeshCoarse(i, data);
+			destination->SetOutputMeshCoarse(i, data);  //put the copied cached coarse mesh into the output parameter
 		}
 		data->Delete();
 	}
@@ -506,7 +507,7 @@ void vtkMEDPolyDataDeformationPKCaching::outputOutput(vtkMEDPolyDataDeformationP
 void vtkMEDPolyDataDeformationPKCaching::destroyOutput(vtkMEDPolyDataDeformationPKCaching* & data, void*)
 {
 	log("destroy output begin");
-	data->Delete();
+	data->Delete();  //delete the object
 	log("destroy output begin");
 }
 
@@ -514,27 +515,28 @@ uint64_t vtkMEDPolyDataDeformationPKCaching::outputGetSize(vtkMEDPolyDataDeforma
 {
 	log("output get size begin");
 	int sum = 0;
+	//iterate through all output meshes
 	for (unsigned int i = 0; i < source->GetNumberOfMeshes(); i++)
 	{
-		sum += source->GetOutputMesh(i)->GetActualMemorySize();
+		sum += source->GetOutputMesh(i)->GetActualMemorySize();  //add the output mesh's size to the sum
 		if (source->outputMeshesCoarse[i] != nullptr)
-			sum += source->outputMeshesCoarse[i]->GetActualMemorySize();
+			sum += source->outputMeshesCoarse[i]->GetActualMemorySize();  //add the output coarse mesh's size to the sum
 	}
 	log("output get size end");
-	return sum * 1024;
+	return sum * 1024;  //the sum is in kilobytes so we have to multiply by 1024
 }
 
 bool vtkMEDPolyDataDeformationPKCaching::staticExectuteMultidata(vtkMEDPolyDataDeformationPKCaching* inputFilter, vtkMEDPolyDataDeformationPKCaching* outputFilter)
 {
 	log("EXECUTING");
-	bool ret = inputFilter->vtkMEDPolyDataDeformationPK::ExecuteMultiData();
+	bool ret = inputFilter->vtkMEDPolyDataDeformationPK::ExecuteMultiData();  //call parents ExecuteMultiData
 	log("EXECUTING DONE");
 	return ret;
 }
 
 bool vtkMEDPolyDataDeformationPKCaching::ExecuteMultiData()
 {
-	bool ret = cachedFunction->call(this, this);
+	bool ret = cachedFunction->call(this, this);  //use cached function to create the output data
 	log("Space taken: ", cacheManager->getSpaceTaken());
 	return ret;
 }
