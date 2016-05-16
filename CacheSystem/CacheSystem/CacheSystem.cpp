@@ -3,7 +3,7 @@
 using namespace CacheSystem;
 using namespace std;
 
-int function(const int & input) { return input * 10; }  //funkce generujici data
+int function(int input) { return input * 10; }  //funkce generujici data
 bool paramEqualFunction(const int & val1, const int & val2, void*) { return val1 == val2; }
 void paramInitFunction(const int & source, int* destination, void*) { *destination = source; }
 void paramDestroyFunction(int & data, void*) { /*zde neni potreba nic provadet*/ }
@@ -15,10 +15,9 @@ uint64_t returnGetSizeFunction(const int & data, void*) { return sizeof(int); }
 
 int main()
 {
-	CacheManagerConfiguration managerConf;
-	CachedFunctionManager manager(managerConf);
+	CachedFunctionManager manager;
 	CacheConfiguration conf;
-	conf.setParamInfo(0, TypedParameterInfo<int>(  //pouze int, nikoliv const int &
+	conf.setParamInfo(0, TypedParameterInfo<int>(
 		ParameterType::InputParam,
 		paramEqualFunction,  //funkce pro porovnani
 		paramInitFunction,  //funkce pro inicializaci
@@ -34,8 +33,10 @@ int main()
 		StandardFunctions::DirectReturn<int>,  //chceme hodnotu vracet primo z cache
 		returnGetSizeFunction  //funkce pro zjisteni velikosti
 		));
-	//zde se dosazuje cely typ const int &
-	CachedFunction<int, const int &>* cachedFunction = manager.createCachedFunction(conf, function);
+	CachedFunction<int, int>* cachedFunction = manager.createCachedFunction(conf, function);
+
+	int a = cachedFunction->call(10);
+	int b = function(10);
 
 	cout << cachedFunction->call(7) << endl;
 	cout << cachedFunction->call(5) << endl;

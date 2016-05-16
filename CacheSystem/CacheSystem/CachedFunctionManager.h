@@ -43,6 +43,11 @@ namespace CacheSystem
 	public:
 		/**
 		initializing constructor
+		*/
+		CachedFunctionManager() : conf(CacheManagerConfiguration()), spaceTaken(0), policy(conf.getCachePolicy()) {}
+
+		/**
+		initializing constructor
 		parameter is the cache manager configuration object
 		*/
 		CachedFunctionManager(const CacheManagerConfiguration & conf) : conf(conf), spaceTaken(0), policy(conf.getCachePolicy()) {}
