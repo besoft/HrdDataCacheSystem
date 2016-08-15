@@ -83,7 +83,6 @@ namespace CacheSystem
 
 		/**
 		creates a copy of this object a returns pointer to the new object,
-		it must be deleted by the delete operator in the end
 		*/
 		std::shared_ptr<ReturnInfo> getCopy();
 	};
