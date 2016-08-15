@@ -9,6 +9,7 @@ namespace CacheSystem
 		{
 			CacheData* data = (CacheData*)dataId;
 			PolicyData* policyData = new PolicyData;
+			policyData->referenceCount = 0;
 			policyData->lastPriorityCalculation = 0;
 			policyData->timeContribution = pow((dataCreationTime + 10), LOG_10_2) - 2;
 			double partOfMemory = (double)dataSize / data->getCachedFunction()->getManager()->getCacheCapacity();
