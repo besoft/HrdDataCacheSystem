@@ -1,4 +1,4 @@
-PROJECT(Cache)
+PROJECT(CacheSystem)
 
 # Set your list of sources here.
 SET(PROJECT_SRCS
@@ -41,36 +41,10 @@ SET(PROJECT_SRCS
 	TypedReturnInfo.h
 	TypedValue.h
 	Value.h
-	
-	Cache.h
-	Cache.cpp
 )
 
-#Add support for VS 2010 Edit & Continue
-IF (${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 10" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 11")
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
-ENDIF (${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 10" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 11")
+# Create the library.
+ADD_LIBRARY(${PROJECT_NAME} ${PROJECT_SRCS})
 
-#Add OpenMP Support + Support for Parallel Compilation
-IF (${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 10" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 11")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /openmp")
-ENDIF (${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 10" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 11")
-
-
-IF(LHP_BUILD_DLL)
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /FORCE:MULTIPLE")
-  SET(BUILD_SHARED_LIBS 1)
-  ADD_DEFINITIONS(-DLHP_VME_EXPORTS)
-  # Create the library.
-  ADD_LIBRARY(${PROJECT_NAME} ${PROJECT_SRCS})
-  TARGET_LINK_LIBRARIES(${PROJECT_NAME} mafDLL lhpCommon vtkLHP ${LHPExtLibs_TARGETS})
-
-  IF (LHPExtLibs_BUILD_TARGETS)
-    ADD_DEPENDENCIES(${PROJECT_NAME} ${LHPExtLibs_BUILD_TARGETS})
-  ENDIF (LHPExtLibs_BUILD_TARGETS)
-ELSE(LHP_BUILD_DLL)
-  # Create the library.
-  ADD_LIBRARY(${PROJECT_NAME} ${PROJECT_SRCS})
-ENDIF (LHP_BUILD_DLL)
-
+# Inform CMAKE about the include directory to be used in the projects that depends on this
+target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR})

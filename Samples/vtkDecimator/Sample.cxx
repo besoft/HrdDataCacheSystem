@@ -1,3 +1,11 @@
+#include "vtkConfigure.h"
+
+//this is required to initialize rendering
+#include <vtkAutoInit.h>
+#if VTK_MAJOR_VERSION <= 6
+VTK_MODULE_INIT(vtkRenderingOpenGL);
+#endif
+
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
 #include <vtkRenderWindow.h>
