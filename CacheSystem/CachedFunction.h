@@ -22,6 +22,7 @@ namespace CacheSystem
 	template <class ReturnType, class... ParamTypes>
 	ReturnType CachedFunction<ReturnType, ParamTypes...>::call(ParamTypes... params)
 	{
+		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
 		uint64_t hash = calculateHash(0, 0, params...);
@@ -77,6 +78,7 @@ namespace CacheSystem
 	template <class... ParamTypes>
 	void CachedFunction<void, ParamTypes...>::call(ParamTypes... params)
 	{
+		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
 		uint64_t hash = calculateHash(0, 0, params...);

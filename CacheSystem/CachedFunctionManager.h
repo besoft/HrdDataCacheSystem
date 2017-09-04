@@ -2,6 +2,7 @@
 #define _CACHED_FUNCTION_MANAGER_H
 
 #include <vector>
+#include <mutex>
 #include "CachedFunctionDeclaration.h"
 #include "CacheManagerConfiguration.h"
 #include "CachePolicy.h"
@@ -40,7 +41,25 @@ namespace CacheSystem
 		*/
 		CacheData* getEvictionCandidate();
 
+		/**
+		mutex for thread safe CachedFunction calls
+		*/
+		std::recursive_mutex mutex;
+
 	public:
+		/**
+		instances of this class can be used to lock a given CachedFunctionManager
+		*/
+		class CachedFunctionCallLocker
+		{
+		private:
+			CachedFunctionManager* manager;
+
+		public:
+			CachedFunctionCallLocker(CachedFunctionManager* manager) : manager(manager) { manager->lockCachedFunctionCalls(); }
+			~CachedFunctionCallLocker() { manager->unlockCachedFunctionCalls(); }
+		};
+
 		/**
 		initializing constructor
 		*/
@@ -91,6 +110,17 @@ namespace CacheSystem
 		iterates through all data objects in all cache objects and calls cacheMissEvent on the cache policy for all of them
 		*/
 		void performCacheMissEvents();
+
+		/**
+		after this method is called no CachedFuncion call can be made from a different thread
+		*/
+		void lockCachedFunctionCalls() { mutex.lock(); }
+
+		/**
+		this method must be called after calling the lockCachedFunctionCalls method
+		after this method is called CachedFunction calls can be made from different threads again
+		*/
+		void unlockCachedFunctionCalls() { mutex.unlock(); }
 
 		/**
 		creates, registers and returns a new cache object
