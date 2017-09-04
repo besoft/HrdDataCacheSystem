@@ -1,4 +1,0 @@
-mafBase
-mafReferenceCounted
-mafObject
-mafObserver

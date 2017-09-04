@@ -63,7 +63,7 @@ University of Bedforshire, University of West Bohemia
 /*virtual*/ void medVMEMuscleWrapper::MustUpdateCheck()
 {
 #pragma region FAST CHECKS
-	if (m_UseFastChecks != 0)
+	if (m_UseFastChecks != 0)		
 	{
 		//faster check assumes that the change may come only 
 		//1) from the GUI of this VME => m_Modified flags are already set from the OnEvent handling
@@ -81,7 +81,7 @@ University of Bedforshire, University of West Bohemia
 				(*pItem)->Modified |= CWrapperItem::CP_WRAPPER_MODIFIED;
 
 				if ((*pItem)->pVmeRP_CP[1] != NULL && (*pItem)->pVmeRP_CP[0] != NULL)	//check, if the wrapper as the whole is valid and may have an impact on the result
-				{
+				{				
 					m_Modified |= INPUT_WRAPPER_MODIFIED;
 
 					_RPT1(_CRT_WARN, "INPUT_WRAPPER_MODIFIED(flgs = %d)\n", (*pItem)->Modified);
@@ -93,9 +93,9 @@ University of Bedforshire, University of West Bohemia
 
 #pragma region SLOW CHECKS
 	else
-	{
+	{		
 		//check, if the output space matrix has not changed			
-		unsigned long checksum = mafDataChecksum::Adler32Checksum((unsigned char*)m_Transform->GetMatrix().GetElements(), 16 * sizeof(double));
+		unsigned long checksum = mafDataChecksum::Adler32Checksum((unsigned char*)m_Transform->GetMatrix().GetElements(), 16*sizeof(double));
 		if (checksum != m_nOutputSpaceChecksum)
 		{
 			m_nOutputSpaceChecksum = checksum;
@@ -119,10 +119,11 @@ University of Bedforshire, University of West Bohemia
 		{
 			//muscle must be always tested at time 0, but we suppose it is not unchanged during the time	
 			m_MuscleVme->GetOutput()->Update();
-			checksum = 1 | mafDataChecksum::CombineAdler32Checksums(
-				mafDataChecksum::Adler32Checksum((unsigned char*)GetVMEAbsMatrix(m_MuscleVme)->GetElements(), 16 * sizeof(double)),
+			checksum = 1 | mafDataChecksum::CombineAdler32Checksums(			
+				mafDataChecksum::Adler32Checksum((unsigned char*)
+					medVMEMuscleWrappingHelper::GetVMEAbsMatrix(m_MuscleVme)->GetElements(), 16*sizeof(double)),
 				ComputeCheckSum(vtkPolyData::SafeDownCast(m_MuscleVme->GetOutput()->GetVTKData()))
-				);
+				); 	
 
 			if (checksum != m_nMuscleChecksum)
 			{
@@ -130,15 +131,15 @@ University of Bedforshire, University of West Bohemia
 				m_Modified |= INPUT_MUSCLE_MODIFIED;
 
 				_RPT0(_CRT_WARN, "INPUT_MUSCLE_MODIFIED\n");
-			}
+			}			
 		}
 
 
 		//check all REST and CURRENT POSITION wrappers and their RefSys, if they have not changed
 		for (CWrapperItemCollectionIterator pItem = m_Wrappers.begin(); pItem != m_Wrappers.end(); pItem++)
-		{
+		{		
 			for (int i = 0; i < 2; i++)
-			{
+			{										
 				if ((*pItem)->pVmeRP_CP[i] == NULL)
 				{
 					//wrapper is invalid
@@ -146,23 +147,24 @@ University of Bedforshire, University of West Bohemia
 					{
 						//but we know about it => there must have been a change
 						(*pItem)->nWrapperCheckSums[i] = 0;
-						(*pItem)->Modified |= (i == 0 ? CWrapperItem::RP_WRAPPER_MODIFIED : CWrapperItem::CP_WRAPPER_MODIFIED);
-					}
+						(*pItem)->Modified |= (i == 0 ? CWrapperItem::RP_WRAPPER_MODIFIED : CWrapperItem::CP_WRAPPER_MODIFIED);										
+					}							
 				}
 				else
 				{
 					//wrapper is valid					
 					(*pItem)->pVmeRP_CP[i]->GetOutput()->Update();
 					checksum = 1 | mafDataChecksum::CombineAdler32Checksums(
-						mafDataChecksum::Adler32Checksum((unsigned char*)GetVMEAbsMatrix((*pItem)->pVmeRP_CP[i])->GetElements(), 16 * sizeof(double)),
+						mafDataChecksum::Adler32Checksum((unsigned char*)
+							medVMEMuscleWrappingHelper::GetVMEAbsMatrix((*pItem)->pVmeRP_CP[i])->GetElements(), 16*sizeof(double)),
 						ComputeCheckSum(vtkPolyData::SafeDownCast((*pItem)->pVmeRP_CP[i]->GetOutput()->GetVTKData()))
 						);
 
 					if (checksum != (*pItem)->nWrapperCheckSums[i])
 					{
 						(*pItem)->nWrapperCheckSums[i] = checksum;
-						(*pItem)->Modified |= (i == 0 ? CWrapperItem::RP_WRAPPER_MODIFIED : CWrapperItem::CP_WRAPPER_MODIFIED);
-					}
+						(*pItem)->Modified |= (i == 0 ? CWrapperItem::RP_WRAPPER_MODIFIED : CWrapperItem::CP_WRAPPER_MODIFIED);				
+					}					
 				} //end else [Wrapper]
 
 				//check if the RefSys hasn't changed		
@@ -174,7 +176,7 @@ University of Bedforshire, University of West Bohemia
 						//but we know about it => there must have been a change
 						(*pItem)->nRefSysChecksSums[i] = 0;
 						(*pItem)->Modified |= (i == 0 ? CWrapperItem::RP_REFSYS_MODIFIED : CWrapperItem::CP_REFSYS_MODIFIED);
-					}
+					}	
 				}
 				else
 				{
@@ -183,13 +185,13 @@ University of Bedforshire, University of West Bohemia
 					unsigned long checksum = GetRefSysVMEOrigin((*pItem)->pVmeRefSys_RP_CP[i], RSO) ?
 						(1 | mafDataChecksum::Adler32Checksum((unsigned char*)&RSO[0], sizeof(RSO))) : 0;
 
-					if (checksum != (*pItem)->nRefSysChecksSums[i])
-					{
+					if (checksum != (*pItem)->nRefSysChecksSums[i])			
+					{            
 						(*pItem)->nRefSysChecksSums[i] = checksum;
 						(*pItem)->RefSysOrigin[i][0] = RSO[0];
 						(*pItem)->RefSysOrigin[i][1] = RSO[1];
-						(*pItem)->RefSysOrigin[i][2] = RSO[2];
-					}
+						(*pItem)->RefSysOrigin[i][2] = RSO[2];					
+					}					
 				} //end else [RefSys]			
 			} //end for i		
 
@@ -200,7 +202,7 @@ University of Bedforshire, University of West Bohemia
 					m_Modified |= INPUT_WRAPPER_MODIFIED;
 					_RPT1(_CRT_WARN, "INPUT_WRAPPER_MODIFIED(flgs = %d)\n", (*pItem)->Modified);
 				}
-			}
+			}			
 		} //end for [all wrappers]	
 	} //end if m_UseFastCheck = 1	
 #pragma endregion SLOW CHECKS
@@ -240,7 +242,7 @@ University of Bedforshire, University of West Bohemia
 
 	//check, if there is anything new to be visualized
 	int nMask = m_VisMode == 0 ? FIBERS_OPTIONS_MODIFIED : 0;
-	if ((m_Modified & ~nMask) != NOTHING_MODIFIED)
+	if ((m_Modified & ~nMask) != NOTHING_MODIFIED) 
 		m_Modified |= POLYDATA_MUST_UPDATE;	//output polydata should be displayed
 }
 
@@ -250,7 +252,7 @@ University of Bedforshire, University of West Bohemia
 //set in this method to allow determination, if input has changed.
 //N.B. Called from InternalPreUpdate 
 /*virtual*/ void medVMEMuscleWrapper::PrepareInput()
-{
+{	
 	//this happens when the user just checks VME without its selection  
 	//or deletes some linked VME from VME tree
 	if (!m_bLinksRestored)
@@ -260,7 +262,7 @@ University of Bedforshire, University of West Bohemia
 	}
 
 	//check what must be update
-	MustUpdateCheck();
+	MustUpdateCheck();	
 
 	if ((m_Modified & (INPUT_MUSCLE_MODIFIED | INPUT_WRAPPER_MODIFIED)) != 0)
 	{
@@ -280,12 +282,12 @@ University of Bedforshire, University of West Bohemia
 #ifdef _PROFILING_
 		LARGE_INTEGER liEnd, liFreq;
 		QueryPerformanceCounter(&liEnd);
-		QueryPerformanceFrequency(&liFreq);
+		QueryPerformanceFrequency(&liFreq);	
 
 		FILE* fProf;
 		if (
 #if _MSC_VER >= 1400
-			0 == (fopen_s(&fProf,
+			0 == (fopen_s(&fProf, 
 #else
 			NULL != (fProf = fopen(
 #endif
@@ -305,11 +307,11 @@ University of Bedforshire, University of West Bohemia
 //It ensures that we have the transformed wrappers on the input. 	
 //N.B. Must be called after MustUpdateCheck() + called from PrepareInput
 /*virtual*/ void medVMEMuscleWrapper::PrepareInputWrappers()
-{
+{			
 	if ((m_Modified & INPUT_WRAPPER_MODIFIED) != 0)
 	{
 		mafMatrix output_space;
-		output_space.DeepCopy(GetVMEAbsMatrix(this));
+		output_space.DeepCopy(medVMEMuscleWrappingHelper::GetVMEAbsMatrix(this));
 
 		for (CWrapperItemCollectionIterator pItem = m_Wrappers.begin(); pItem != m_Wrappers.end(); pItem++)
 		{
@@ -335,8 +337,8 @@ University of Bedforshire, University of West Bohemia
 						//Debug_Write(i == 0 ? "OC - Local" : "DC - Local", (*pItem)->pCurves[i]);
 
 						//transform coordinates into output reference system
-						TransformPoints((*pItem)->pCurves[i]->GetPoints(), (*pItem)->pCurves[i]->GetPoints(),
-							GetVMEAbsMatrix((*pItem)->pVmeRP_CP[i]), &output_space);
+						TransformPoints((*pItem)->pCurves[i]->GetPoints(), (*pItem)->pCurves[i]->GetPoints(), 
+							medVMEMuscleWrappingHelper::GetVMEAbsMatrix((*pItem)->pVmeRP_CP[i]), &output_space);
 
 						//Debug_Write(i == 0 ? "OC - Transformed" : "DC - Transformed", (*pItem)->pCurves[i]);
 
@@ -347,14 +349,14 @@ University of Bedforshire, University of West Bohemia
 							unsigned long checksum = GetRefSysVMEOrigin((*pItem)->pVmeRefSys_RP_CP[i], RSO) ?
 								(1 | mafDataChecksum::Adler32Checksum((unsigned char*)&RSO[0], sizeof(RSO))) : 0;
 
-							if (checksum != (*pItem)->nRefSysChecksSums[i])
-							{
+							if (checksum != (*pItem)->nRefSysChecksSums[i])			
+							{            
 								(*pItem)->nRefSysChecksSums[i] = checksum;
 								(*pItem)->RefSysOrigin[i][0] = RSO[0];
 								(*pItem)->RefSysOrigin[i][1] = RSO[1];
-								(*pItem)->RefSysOrigin[i][2] = RSO[2];
+								(*pItem)->RefSysOrigin[i][2] = RSO[2];					
 							}
-						}
+						}						
 					}
 				}
 			} //end for i
@@ -388,7 +390,7 @@ University of Bedforshire, University of West Bohemia
 		//there is a valid associated muscle, so transform it
 		vtkPolyData* pPoly = CreateTransformedPolyDataFromVME(m_MuscleVme
 #ifdef _DEBUG_VIS_
-			, "Muscle"
+			,"Muscle"
 #endif
 			);
 
@@ -404,9 +406,9 @@ University of Bedforshire, University of West Bohemia
 //it ensures that we have transformed input muscle and wrappers, so
 //InternalUpdate may deform x deform + create fibers as needed.
 //This method also changes m_Modified status.
-/*virtual*/ void medVMEMuscleWrapper::InternalPreUpdate()
-//-----------------------------------------------------------------------
-{
+/*virtual*/ void medVMEMuscleWrapper::InternalPreUpdate() 
+	//-----------------------------------------------------------------------
+{	
 	//this is called by the kernel when a musclewrapper should prepare its data
 	//there are five various scenarios:
 	//
@@ -484,7 +486,7 @@ University of Bedforshire, University of West Bohemia
 					it = m_VMEMuscleWrappers.begin();	it != m_VMEMuscleWrappers.end(); it++)
 				{
 					medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(*it);
-					if (wrapper == this)
+					if (wrapper == this) 
 					{
 						//removes this from list => list contains only SLAVES
 						m_VMEMuscleWrappers.erase(it);
@@ -502,16 +504,16 @@ University of Bedforshire, University of West Bohemia
 			m_VMEMuscleWrappers.clear();
 		}
 		else if (m_VMEMuscleWrappers.size() != 0)
-		{
+		{									
 			//OK, we are MASTER of other muscle wrappers with which we will need to cooperate
 			//notify them that we are their master + check if any of them signal that their muscle 
 			//needs to be deformed (it is out of date)
-			for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator
+			for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator 
 				it = m_VMEMuscleWrappers.begin();	it != m_VMEMuscleWrappers.end(); it++)
 			{
 				medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(*it);
 
-				_ASSERTE((wrapper->m_MasterVMEMuscleWrapper == NULL ||
+				_ASSERTE((wrapper->m_MasterVMEMuscleWrapper == NULL|| 
 					wrapper->m_MasterVMEMuscleWrapper == this) &&
 					wrapper->m_VMEMuscleWrappers.size() == 0);
 
@@ -523,17 +525,17 @@ University of Bedforshire, University of West Bohemia
 
 				//if the wrapper is out of date, we will need to execute deformation
 				if ((wrapper->m_Modified & DEFORMATION_OPTIONS_MODIFIED) != 0)
-					m_Modified |= DEFORMATION_OPTIONS_MODIFIED | FIBERS_OPTIONS_MODIFIED | POLYDATA_MUST_UPDATE;
+					m_Modified |= DEFORMATION_OPTIONS_MODIFIED | FIBERS_OPTIONS_MODIFIED | POLYDATA_MUST_UPDATE;	
 			}
 
 			//if this MASTER muscle wrapper is to be updated, we will need to update SLAVES as well
 			if ((m_Modified & DEFORMATION_OPTIONS_MODIFIED) != 0)
-			{
-				for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator
+			{				
+				for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator 
 					it = m_VMEMuscleWrappers.begin();	it != m_VMEMuscleWrappers.end(); it++)
 				{
 					medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(*it);
-					wrapper->m_Modified |= DEFORMATION_OPTIONS_MODIFIED | FIBERS_OPTIONS_MODIFIED | POLYDATA_MUST_UPDATE;
+					wrapper->m_Modified |= DEFORMATION_OPTIONS_MODIFIED | FIBERS_OPTIONS_MODIFIED | POLYDATA_MUST_UPDATE;	
 				}
 			}
 		}
@@ -545,7 +547,7 @@ University of Bedforshire, University of West Bohemia
 //nothing has changed (especially lot of data is generated during the animation)
 //we will need to avoid redundant deformation as much as possible
 void medVMEMuscleWrapper::InternalUpdate()
-//-----------------------------------------------------------------------
+	//-----------------------------------------------------------------------
 {
 #pragma region DEFORMATION PART
 	//check, if we do not have any master above us
@@ -558,7 +560,7 @@ void medVMEMuscleWrapper::InternalUpdate()
 	{
 		//we are either MASTER or we are SINGLE (not a part of any model)
 		//if needed, deform the muscle		
-		if ((m_Modified & DEFORMATION_OPTIONS_MODIFIED) != 0)
+		if ((m_Modified & DEFORMATION_OPTIONS_MODIFIED) != 0) 
 		{
 #ifdef _PROFILING_
 			LARGE_INTEGER liStart;
@@ -572,11 +574,11 @@ void medVMEMuscleWrapper::InternalUpdate()
 			m_Modified &= ~DEFORMATION_OPTIONS_MODIFIED;
 
 			//change m_Modified for our slaves
-			for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator
+			for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator 
 				it = m_VMEMuscleWrappers.begin();	it != m_VMEMuscleWrappers.end(); it++)
 			{
 				medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(*it);
-				wrapper->m_Modified &= ~DEFORMATION_OPTIONS_MODIFIED;
+				wrapper->m_Modified &= ~DEFORMATION_OPTIONS_MODIFIED;							
 			}
 
 #ifdef _PROFILING_
@@ -587,19 +589,19 @@ void medVMEMuscleWrapper::InternalUpdate()
 			FILE* fProf;
 			if (
 #if _MSC_VER >= 1400
-				0 == (fopen_s(&fProf,
+				0 == (fopen_s(&fProf, 
 #else
 				NULL != (fProf = fopen(
 #endif
 				"muscle_wrapping_profiling_deformation.txt", "at")))
-			{
+			{	
 				vtkMassProperties* mp = vtkMassProperties::New();
 				mp->SetInput(m_pTransformedMuscle);
 				double dblVol1 = mp->GetVolume();
 
 				mp->SetInput(m_pDeformedMuscle);
 				double dblVol2 = mp->GetVolume();
-				
+
 				/****************************/
 				/*PROCESS_MEMORY_COUNTERS memCounterAfter;
 				bool result = GetProcessMemoryInfo(GetCurrentProcess(), &memCounterAfter, sizeof(memCounterAfter));*/
@@ -609,7 +611,7 @@ void medVMEMuscleWrapper::InternalUpdate()
 					(1000.0*(liEnd.QuadPart - liStart.QuadPart)) / liFreq.QuadPart,
 					100.0*dblVol2 / dblVol1);
 
-				for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator
+				for (medVMEMusculoSkeletalModel::mafVMENodeList::const_iterator 
 					it = m_VMEMuscleWrappers.begin();	it != m_VMEMuscleWrappers.end(); it++)
 				{
 					medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(*it);
@@ -618,19 +620,20 @@ void medVMEMuscleWrapper::InternalUpdate()
 					mp->SetInput(wrapper->m_pDeformedMuscle);
 					dblVol2 = mp->GetVolume();
 
-					_ftprintf(fProf, "SLAVE\t%s\t%.3f\t\t%.2f%%\n", wrapper->GetName(),
-						this->GetTimeStamp(), 100.0*dblVol2 / dblVol1);
+					_ftprintf(fProf, "SLAVE\t%s\t%.3f\t\t%.2f%%\n", wrapper->GetName(), 
+						this->GetTimeStamp(),	100.0*dblVol2 / dblVol1);
 				}
 
+				fclose(fProf);
 				/*****************************************/
-				/*fclose(fProf);
+				/*
 				FILE* myMeasurementData = fopen("myMeasurementData.csv", "at");
 				_ftprintf(fProf, ";%s;%.3f;%d;\n", this->GetName(), (1000.0*(liEnd.QuadPart - liStart.QuadPart)) / liFreq.QuadPart, memCounterAfter.WorkingSetSize);
 				fclose(myMeasurementData);*/
 				/*****************************************/
 			}
 #endif
-		}
+		}			
 	} //end [we are MASTER]
 #pragma endregion DEFORMATION PART
 
@@ -643,8 +646,8 @@ void medVMEMuscleWrapper::InternalUpdate()
 	//m_VisMode says, if we are going to display fibers or only deformed muscles
 	//if we do not intend to display fibers, skip any change to fibers options
 	//at present, it will be reflected when m_VisMode is changed	
-	if (m_VisMode != 0 && (m_Modified & FIBERS_OPTIONS_MODIFIED) != 0)
-	{
+	if (m_VisMode != 0 && (m_Modified & FIBERS_OPTIONS_MODIFIED) != 0) 
+	{	
 		//fibers must be recreated (typically, it there is any immediate need for it)
 
 #ifdef _PROFILING_
@@ -669,7 +672,7 @@ void medVMEMuscleWrapper::InternalUpdate()
 		FILE* fProf;
 		if (
 #if _MSC_VER >= 1400
-			0 == (fopen_s(&fProf,
+			0 == (fopen_s(&fProf, 
 #else
 			NULL != (fProf = fopen(
 #endif
@@ -680,7 +683,7 @@ void medVMEMuscleWrapper::InternalUpdate()
 			fclose(fProf);
 		}
 #endif							
-	}
+	}	
 
 #pragma endregion DECOMPOSITION PART
 
@@ -692,7 +695,7 @@ void medVMEMuscleWrapper::InternalUpdate()
 		else
 		{
 			if (m_FbThickness == 0.0)// || m_DeformationMethod == 2) // method 2 = mass spring system - generates balls instead of tubes
-				m_PolyData->ShallowCopy(m_pDecomposedMuscle);
+				m_PolyData->ShallowCopy(m_pDecomposedMuscle);    
 			else
 			{
 				if (m_pTubeFilter == NULL)
@@ -702,8 +705,8 @@ void medVMEMuscleWrapper::InternalUpdate()
 				//pTube->SetCapping(true);
 				m_pTubeFilter->SetNumberOfSides(8);
 				m_pTubeFilter->SetRadius(m_FbThickness); //0.01);				
-				m_pTubeFilter->Update();
-				m_PolyData->ShallowCopy(m_pTubeFilter->GetOutput());
+				m_pTubeFilter->Update();    
+				m_PolyData->ShallowCopy(m_pTubeFilter->GetOutput());    
 			}
 
 
@@ -713,7 +716,7 @@ void medVMEMuscleWrapper::InternalUpdate()
 			mafNEW(VME);
 			VME->ReparentTo(this);
 			VME->SetData(m_PolyData, 0);
-			VME->SetName(wxString::Format("CONTOURS_%d", m_FbResolution));
+			VME->SetName(wxString::Format("CONTOURS_%d", m_FbResolution));  
 
 			mafEvent ev(this, VME_ADD, VME);
 			this->ForwardUpEvent(ev);
@@ -727,7 +730,7 @@ void medVMEMuscleWrapper::InternalUpdate()
 
 
 void recomputePoint(double* point, const double* p1, const double* p2, double t) {
-	double s[3] = { 0, 0, 0 };
+	double s[3] = {0,0,0};
 	PKUtils::SubtractVertex(p2, p1, s);
 	PKUtils::MultiplyVertex(s, t);
 	PKUtils::AddVertex(s, p1, point);
@@ -762,8 +765,8 @@ void ProcessCollisions(int startIndex, int noOfItems, vtkMassSpringMuscle **MSSm
 //Deforms the transformed muscle according to existing wrappers.
 //m_pTransformedMuscle -> m_pDeformedMuscle.
 void medVMEMuscleWrapper::DeformMuscle()
-//------------------------------------------------------------------------
-{
+	//------------------------------------------------------------------------
+{	
 	//VLDEnable();
 
 	//this method cannot be called from SLAVES!
@@ -773,7 +776,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 	if (m_DeformationMethod == 2)
 	{
 		//Mass spring system method
-		DeformMuscleMMSS();
+		DeformMuscleMMSS();		
 	}
 	else
 	{
@@ -787,7 +790,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 		mafTransform transform;
 
-		bool bTransform = GetInitialTransform(&transform);
+		bool bTransform = GetInitialTransform(&transform);	
 
 		mafTransform transform_1(transform);
 		transform_1.Invert();
@@ -821,8 +824,8 @@ void medVMEMuscleWrapper::DeformMuscle()
 			pIface->SetNumberOfMeshes(nMuscles);
 
 			//HULLS buffer
-			bool* CoarseMeshPresent = new bool[nMuscles];
-			for (int i = 0; i < nMuscles; i++)
+			bool* CoarseMeshPresent = new bool[nMuscles];		
+			for (int i = 0; i < nMuscles; i++)		
 			{
 				medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(m_VMEMuscleWrappers[i]);
 				if (!bTransform)
@@ -838,7 +841,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 				mafVME* hull = GetHullVME(wrapper->GetMuscleVME_RP());
 				if (CoarseMeshPresent[i] = (hull != NULL))
 				{	//and set it as a coarse mesh for the input VME
-					vtkPolyData* pTransformedPoly = CreateTransformedPolyDataFromVME(hull);
+					vtkPolyData* pTransformedPoly = CreateTransformedPolyDataFromVME(hull);				
 					if (!bTransform)
 						pIface->SetCoarseMesh(i, pTransformedPoly);
 					else
@@ -848,7 +851,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 						pTransformedPoly2->Delete();
 					}
 					pTransformedPoly->Delete();
-				}
+				}	
 
 				pIface->SetOutputMesh(i, wrapper->m_pDeformedMuscle);		//set the output mesh
 
@@ -859,11 +862,11 @@ void medVMEMuscleWrapper::DeformMuscle()
 				{
 					//N.B. wrapper->m_Wrappers[j]->pCurves[x] MAY NOT BE NULL!
 					if (!bTransform) {
-						pIface->SetMeshSkeleton(i, j,
-							wrapper->m_Wrappers[j]->pCurves[0], wrapper->m_Wrappers[j]->pCurves[1], pCorrespondence,
+						pIface->SetMeshSkeleton(i, j, 
+							wrapper->m_Wrappers[j]->pCurves[0], wrapper->m_Wrappers[j]->pCurves[1], pCorrespondence, 
 							(wrapper->m_Wrappers[j]->nRefSysChecksSums[0] != 0 ? wrapper->m_Wrappers[j]->RefSysOrigin[0] : NULL),
 							(wrapper->m_Wrappers[j]->nRefSysChecksSums[1] != 0 ? wrapper->m_Wrappers[j]->RefSysOrigin[1] : NULL)
-							);
+							); 
 					}
 					else
 					{
@@ -872,11 +875,11 @@ void medVMEMuscleWrapper::DeformMuscle()
 						if (wrapper->m_Wrappers[j]->nRefSysChecksSums[0] != 0)
 							transform.TransformPoint(wrapper->m_Wrappers[j]->RefSysOrigin[0], trRefSys);
 
-						pIface->SetMeshSkeleton(i, j,
-							pTransformedPoly, wrapper->m_Wrappers[j]->pCurves[1], pCorrespondence,
+						pIface->SetMeshSkeleton(i, j, 
+							pTransformedPoly, wrapper->m_Wrappers[j]->pCurves[1], pCorrespondence, 
 							(wrapper->m_Wrappers[j]->nRefSysChecksSums[0] != 0 ? trRefSys : NULL),
 							(wrapper->m_Wrappers[j]->nRefSysChecksSums[1] != 0 ? wrapper->m_Wrappers[j]->RefSysOrigin[1] : NULL)
-							);
+							); 
 
 						pTransformedPoly->Delete();
 					}
@@ -889,7 +892,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 			medVMEMusculoSkeletalModel::mafVMENodeList list;
 
 			if (m_pVMEMusculoSkeletalModel != NULL && m_UsePenetrationPrevention)
-			{
+			{						
 				m_pVMEMusculoSkeletalModel->GetBoneGroups(list, medVMEMusculoSkeletalModel::LOD::Lowest);
 
 				nObstacles = (int)list.size();
@@ -899,7 +902,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 				{
 					//get VTK polydata with bones (of the lowest resolution available - to speed up the processing)
 					mafVME* vme = mafVME::SafeDownCast(list[i]);
-					vtkPolyData* pTransformedPoly = CreateTransformedPolyDataFromVME(vme);
+					vtkPolyData* pTransformedPoly = CreateTransformedPolyDataFromVME(vme);				
 					pIface->SetObstacle(i, pTransformedPoly);
 					pTransformedPoly->Delete();
 
@@ -907,16 +910,15 @@ void medVMEMuscleWrapper::DeformMuscle()
 					mafVME* hull = GetHullVME(vme);
 					if (CoarseObstaclePresent[i] = (hull != NULL))
 					{
-						pTransformedPoly = CreateTransformedPolyDataFromVME(hull);
+						pTransformedPoly = CreateTransformedPolyDataFromVME(hull);				
 						pIface->SetCoarseObstacle(i, pTransformedPoly);
-						pTransformedPoly->Delete();
-					}
+						pTransformedPoly->Delete();					
+					}				
 				}
 			}
 
 			//AND DO IT :-)
 			pIface->SetUseProgressiveHulls(m_UseProgressiveHulls);
-
 			_VERIFY(pIface->ExecuteMultiData());
 
 #ifdef USE_CACHE
@@ -929,7 +931,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 #endif
 
 			//store hulls, if they are available
-			for (int i = 0; i < nMuscles; i++)
+			for (int i = 0; i < nMuscles; i++) 
 			{
 				if (!CoarseMeshPresent[i])
 				{
@@ -952,13 +954,13 @@ void medVMEMuscleWrapper::DeformMuscle()
 				}
 			}
 
-			for (int i = 0; i < nObstacles; i++)
+			for (int i = 0; i < nObstacles; i++) 
 			{
 				if (!CoarseObstaclePresent[i])
 				{
 					//we may have a new coarse mesh here computed as a by-product
 					vtkPolyData* hullData = pIface->GetCoarseObstacle(i);
-					if (hullData != NULL) {
+					if (hullData != NULL) {					
 						StoreHull(GetLowestResolutionVME(mafVME::SafeDownCast(list[i])), hullData);
 					}
 					//hullData is destroyed by pIface automatically
@@ -1007,15 +1009,15 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 
 			//HULLS buffer
-			bool* CoarseMeshPresent = new bool[nMuscles];
+			bool* CoarseMeshPresent = new bool[nMuscles];	
 			vtkPolyData ***semiWrappers = new vtkPolyData**[nMuscles]; // all wrappers for all muscles in all time steps
 			int *wrappersCount = new int[nMuscles];
 			double ***wrapperPoints = new double**[nMuscles];
 
 			//vtkPolyData * coarseDeformed = vtkPolyData::New();
-			for (int i = 0; i < nMuscles; i++)
+			for (int i = 0; i < nMuscles; i++)		
 			{
-				medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(m_VMEMuscleWrappers[i]);
+				medVMEMuscleWrapper* wrapper = medVMEMuscleWrapper::SafeDownCast(m_VMEMuscleWrappers[i]);		
 				if (!bTransform)
 					pIface->SetInputMesh(i, wrapper->m_pTransformedMuscle);	//set the input mesh
 				else
@@ -1029,7 +1031,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 				mafVME* hull = GetHullVME(wrapper->GetMuscleVME_RP());
 				if (CoarseMeshPresent[i] = (hull != NULL))
 				{	//and set it as a coarse mesh for the input VME
-					vtkPolyData *pTransformedPoly = CreateTransformedPolyDataFromVME(hull);
+					vtkPolyData *pTransformedPoly = CreateTransformedPolyDataFromVME(hull);				
 					if (!bTransform)
 						pIface->SetCoarseMesh(i, pTransformedPoly);
 					else
@@ -1039,9 +1041,9 @@ void medVMEMuscleWrapper::DeformMuscle()
 							pIface->SetCoarseMesh(i, pTransformedPoly2);	//set the input mesh
 							pTransformedPoly2->Delete();
 						}
-					pTransformedPoly->Delete();
-					hull->Delete();
-				}
+						pTransformedPoly->Delete();
+						hull->Delete();
+				}	
 
 				pIface->SetOutputMesh(i, wrapper->m_pDeformedMuscle);		//set the output mesh
 				//pIface->SetOutputMeshCoarse(i, coarseDeformed);		//set the output mesh
@@ -1051,11 +1053,11 @@ void medVMEMuscleWrapper::DeformMuscle()
 				pIface->SetNumberOfMeshSkeletons(i, nWrappers);
 
 				wrappersCount[i] = nWrappers;
-				vtkPolyData **semiMuscleWrappers;
-				semiMuscleWrappers = new vtkPolyData*[nWrappers * (stepCount + 1)]; // +1 also the ending wrappers have to be saved
-				for (int y = 0; y < stepCount + 1; y++) { //H
-					for (int x = 0; x < nWrappers; x++) { //W
-						semiMuscleWrappers[x + y*nWrappers] = vtkPolyData::New();
+				vtkPolyData **semiMuscleWrappers;			
+				semiMuscleWrappers = new vtkPolyData*[nWrappers * (stepCount+1)]; // +1 also the ending wrappers have to be saved
+				for(int y = 0; y < stepCount+1; y++) { //H
+					for (int x= 0; x < nWrappers; x++) { //W
+						semiMuscleWrappers[x+y*nWrappers] = vtkPolyData::New();
 					}
 				}
 				semiWrappers[i] = semiMuscleWrappers;
@@ -1063,14 +1065,14 @@ void medVMEMuscleWrapper::DeformMuscle()
 				//typedef double VCoord[3];
 				//VCoord* muscleWrapperPoint = new VCoord[nWrappers * (stepCount+1)];			
 
-				double ** muscleWrapperPoint = new double*[nWrappers * (stepCount + 1)];
+				double ** muscleWrapperPoint = new double*[nWrappers * (stepCount+1)];
 				wrapperPoints[i] = muscleWrapperPoint;
 
 				for (int j = 0; j < nWrappers; j++)
 				{
 					double pw0[3];
 					double pw1[3];
-					if (wrapper->m_Wrappers[j]->nRefSysChecksSums[0] != 0) {
+					if (wrapper->m_Wrappers[j]->nRefSysChecksSums[0] != 0 ) {
 						pw0[0] = wrapper->m_Wrappers[j]->RefSysOrigin[0][0];
 						pw0[1] = wrapper->m_Wrappers[j]->RefSysOrigin[0][1];
 						pw0[2] = wrapper->m_Wrappers[j]->RefSysOrigin[0][2];
@@ -1085,11 +1087,11 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 					//N.B. wrapper->m_Wrappers[j]->pCurves[x] MAY NOT BE NULL!
 					if (!bTransform) {
-						pIface->SetMeshSkeleton(i, j,
-							wrapper->m_Wrappers[j]->pCurves[0], wrapper->m_Wrappers[j]->pCurves[1], pCorrespondence,
+						pIface->SetMeshSkeleton(i, j, 
+							wrapper->m_Wrappers[j]->pCurves[0], wrapper->m_Wrappers[j]->pCurves[1], pCorrespondence, 
 							(wrapper->m_Wrappers[j]->nRefSysChecksSums[0] != 0 ? wrapper->m_Wrappers[j]->RefSysOrigin[0] : NULL),
 							(wrapper->m_Wrappers[j]->nRefSysChecksSums[1] != 0 ? wrapper->m_Wrappers[j]->RefSysOrigin[1] : NULL)
-							);
+							); 
 					}
 					else
 					{
@@ -1118,7 +1120,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 
 						for (fn = 1; fn <= stepCount; fn++) {
-							muscleWrapperPoint[fn*nWrappers + j] = new double[3];
+							muscleWrapperPoint[fn*nWrappers+j] = new double[3];
 
 							vtkPoints* startPoints = semiMuscleWrappers[j]->GetPoints();
 							vtkPoints* endPoints = newEnd->GetPoints();
@@ -1129,34 +1131,34 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 
 							double *sp, *ep, *pw;
-							pw = muscleWrapperPoint[fn*nWrappers + j];
-							for (int k = 0; k < 3; k++) {
-								pw[k] = (pw1[k] - pw0[k]) / stepCount + pw1[k];
+							pw = muscleWrapperPoint[fn*nWrappers+j];
+							for(int k = 0; k < 3; k++) {
+								pw[k] = (pw1[k]-pw0[k])/stepCount + pw1[k];
 							}
 							for (int l = 0; l < nPoints; l++) // for all points of the mesh surface
-							{
+							{      
 								sp = startPoints->GetPoint(l);
 								ep = endPoints->GetPoint(l);
 
 								double x[3];
 								// the same point in the moved RP and CP are selected, the distance between them divided into several (= stepCount)
 								// parts and a new point position is computed in each step
-								for (int k = 0; k < 3; k++) {
-									x[k] = sp[k] + (fn)*(ep[k] - sp[k]) / stepCount;
+								for(int k = 0; k < 3; k++) {
+									x[k] = sp[k] + (fn)*(ep[k] - sp[k])/stepCount;
 								}
 
 								outPoints->SetPoint(l, x); // create a new point position
 							}
 
-							vtkPolyData* pNew = semiMuscleWrappers[fn*nWrappers + j];
+							vtkPolyData* pNew = semiMuscleWrappers[fn*nWrappers+j];
 							pNew->SetPoints(outPoints);
 							outPoints->Delete();
 
 							vtkCellArray* outLines = vtkCellArray::New();
 							pNew->SetLines(outLines);
 
-							for (int k = 0; k < nPoints - 1; k++) {
-								vtkIdType ps[2] = { k, k + 1 };
+							for(int k = 0; k < nPoints-1; k++) {
+								vtkIdType ps[2] = {k,k+1};
 								outLines->InsertNextCell(2, ps);
 							}
 							outLines->Delete();
@@ -1177,7 +1179,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 			vtkPolyData **semiresults;
 
 			if (m_pVMEMusculoSkeletalModel != NULL && m_UsePenetrationPrevention)
-			{
+			{					
 				m_pVMEMusculoSkeletalModel->GetBoneGroups(list_CP, medVMEMusculoSkeletalModel::LOD::Lowest);
 
 				nObstacles = (int)list_CP.size();
@@ -1191,9 +1193,9 @@ void medVMEMuscleWrapper::DeformMuscle()
 				nObstacles_RP = (int)list_RP.size();
 
 				semiresults = new vtkPolyData*[nObstacles * stepCount];
-				for (int y = 0; y < stepCount; y++) { //H
-					for (int x = 0; x < nObstacles; x++) { //W
-						semiresults[x + y*nObstacles] = vtkPolyData::New();
+				for(int y = 0; y < stepCount; y++) { //H
+					for (int x= 0; x < nObstacles; x++) { //W
+						semiresults[x+y*nObstacles] = vtkPolyData::New();
 					}
 				}
 
@@ -1207,7 +1209,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 					for (int j = 0; j < nObstacles_RP; j++) {
 						const char* n1 = list_CP[i]->GetName();
 						const char* n2 = list_RP[j]->GetName();
-						if (strcmp(n1, n2) == 0) {
+						if (strcmp(n1,n2) == 0) {
 							vme_RP = mafVME::SafeDownCast(list_RP[j]);
 							break;
 						}
@@ -1226,10 +1228,10 @@ void medVMEMuscleWrapper::DeformMuscle()
 					int nCP = pointsCP->GetNumberOfPoints();
 					int nRP = pointsRP->GetNumberOfPoints();
 
-					for (int fn = 0; fn < stepCount; fn++) { // in each step
+					for (int fn=0; fn < stepCount; fn++) { // in each step
 
 						double *cp, *rp;
-						vtkPolyData* pNew = semiresults[fn*nObstacles + i];//pTransformedPolyRP->NewInstance();
+						vtkPolyData* pNew = semiresults[fn*nObstacles+i];//pTransformedPolyRP->NewInstance();
 						pNew->DeepCopy(pTransformedPolyRP);
 						vtkPoints* outPoints = pointsRP->NewInstance();
 						pNew->SetPoints(outPoints);
@@ -1237,15 +1239,15 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 						outPoints->SetNumberOfPoints(nRP);
 						for (int l = 0; l < nRP; l++) // for all points of the mesh surface
-						{
+						{      
 							cp = pointsCP->GetPoint(l);
 							rp = pointsRP->GetPoint(l);
 
 							double x[3];
 							// the same point in the moved RP and CP are selected, the distance between them divided into several (= stepCount)
 							// parts and a new point position is computed in each step
-							for (int k = 0; k < 3; k++) {
-								x[k] = rp[k] + (fn + 1)*(cp[k] - rp[k]) / stepCount;
+							for(int k = 0; k < 3; k++) {
+								x[k] = rp[k] + (fn+1)*(cp[k] - rp[k])/stepCount;
 							}
 
 							outPoints->SetPoint(l, x); // create a new point position
@@ -1262,7 +1264,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 			for (int i = 0; i < stepCount; i++) {
 				pIface->FreeWrappers();
 				for (int j = 0; j < nObstacles; j++) {
-					vtkPolyData* pNew = semiresults[i*nObstacles + j];
+					vtkPolyData* pNew = semiresults[i*nObstacles+j];
 					pIface->SetObstacle(j, pNew);
 				}
 
@@ -1279,15 +1281,15 @@ void medVMEMuscleWrapper::DeformMuscle()
 					int nWrappers = wrappersCount[j];
 
 					for (int k = 0; k < nWrappers; k++) {
-						vtkPolyData* newStart = semiWrappers[j][i*nWrappers + k];
-						vtkPolyData* newEnd = semiWrappers[j][(i + 1)*nWrappers + k];
+						vtkPolyData* newStart = semiWrappers[j][i*nWrappers+k];
+						vtkPolyData* newEnd = semiWrappers[j][(i+1)*nWrappers+k];
 
 						pIface->AddWrapper(newStart);
 						pIface->AddWrapper(newEnd);
 
-						double *pw0 = wrapperPoints[j][i*nWrappers + k];
-						double *pw1 = wrapperPoints[j][(i + 1)*nWrappers + k];
-						pIface->SetMeshSkeleton(j, k, newStart, newEnd, pCorrespondence, pw0, pw1);
+						double *pw0 = wrapperPoints[j][i*nWrappers+k];
+						double *pw1 = wrapperPoints[j][(i+1)*nWrappers+k];
+						pIface->SetMeshSkeleton(j, k, newStart, newEnd, pCorrespondence, pw0, pw1); 
 					}
 				}
 
@@ -1298,16 +1300,16 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 			for (int i = 0; i < stepCount; i++) {
 				for (int j = 0; j < nObstacles; j++) {
-					semiresults[i*nObstacles + j]->Delete();
+					semiresults[i*nObstacles+j]->Delete();
 				}
 			}
 			for (int j = 0; j < nMuscles; j++) {
 				double** muscleWrapperPoint = wrapperPoints[j];
 				int nWrappers = wrappersCount[j];
-				for (int i = 0; i < stepCount + 1; i++) {
+				for (int i = 0; i < stepCount+1; i++) {
 					for (int k = 0; k < nWrappers; k++) {
-						delete[] muscleWrapperPoint[i*nWrappers + k];
-						semiWrappers[j][i*nWrappers + k]->Delete();
+						delete[] muscleWrapperPoint[i*nWrappers+k];
+						semiWrappers[j][i*nWrappers+k]->Delete();
 					}
 				}
 				delete[] muscleWrapperPoint;
@@ -1321,7 +1323,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 
 			//store hulls, if they are available
-			for (int i = 0; i < nMuscles; i++)
+			for (int i = 0; i < nMuscles; i++) 
 			{
 				if (!CoarseMeshPresent[i])
 				{
@@ -1344,13 +1346,13 @@ void medVMEMuscleWrapper::DeformMuscle()
 				}
 			}
 
-			for (int i = 0; i < nObstacles; i++)
+			for (int i = 0; i < nObstacles; i++) 
 			{
 				if (!CoarseObstaclePresent[i])
 				{
 					//we may have a new coarse mesh here computed as a by-product
 					vtkPolyData* hullData = pIface->GetCoarseObstacle(i);
-					if (hullData != NULL) {
+					if (hullData != NULL) {					
 						StoreHull(GetLowestResolutionVME(mafVME::SafeDownCast(list_CP[i])), hullData);
 					}
 					//hullData is destroyed by pIface automatically
@@ -1390,14 +1392,14 @@ void medVMEMuscleWrapper::DeformMuscle()
 
 			for (CWrapperItemCollectionIterator pItem = m_Wrappers.begin();
 				pItem != m_Wrappers.end(); pItem++)
-			{
+			{    
 				if ((*pItem)->pCurves[0] != NULL && (*pItem)->pCurves[1] != NULL) {
-					pDeformer->SetNthSkeleton(nCurves++,
-						(*pItem)->pCurves[0], (*pItem)->pCurves[1], pCorrespondence,
+					pDeformer->SetNthSkeleton(nCurves++, 
+						(*pItem)->pCurves[0], (*pItem)->pCurves[1], pCorrespondence, 
 						((*pItem)->nRefSysChecksSums[0] != 0 ? (*pItem)->RefSysOrigin[0] : NULL),
 						((*pItem)->nRefSysChecksSums[1] != 0 ? (*pItem)->RefSysOrigin[1] : NULL)
-						);
-				}
+						);          
+				}       
 			}
 
 			pCorrespondence->Delete();
@@ -1416,7 +1418,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 			file.close();
 
 			//disconnect PolyData from its source
-			pDeformer->SetOutput(NULL);
+			pDeformer->SetOutput(NULL);		
 		}
 
 	}
@@ -1426,7 +1428,7 @@ void medVMEMuscleWrapper::DeformMuscle()
 	{
 		//If Debug, visualize data to confirm that it works as it should
 		//NB. this takes just one wrapper into account!
-		Debug_Visualize_DeformationData();
+		Debug_Visualize_DeformationData();	 
 	}
 #endif
 }
@@ -1435,8 +1437,8 @@ void medVMEMuscleWrapper::DeformMuscle()
 //Deforms the transformed muscle using Mass-spring system
 //m_pTransformedMuscle -> m_pDeformedMuscle.
 void medVMEMuscleWrapper::DeformMuscleMMSS()
-//------------------------------------------------------------------------
-{
+	//------------------------------------------------------------------------
+{	
 	//THIS IS CALLED BY MASTER OR SINGLE ONLY
 
 	//update  or creates the particle system according to the current settings
@@ -1457,7 +1459,7 @@ void medVMEMuscleWrapper::DeformMuscleMMSS()
 			m_pParticleSystem->m_MSSbones[i]->Preprocess(transforms[i]);
 		}
 	}
-
+			
 	int nMuscles = (int)m_pParticleSystem->m_MSSmuscles.size();
 #pragma omp for
 	for (int i = 0; i < nMuscles; i++)
@@ -1492,7 +1494,7 @@ void medVMEMuscleWrapper::DeformMuscleMMSS()
 					minDt = m_pParticleSystem->m_MSSmuscles[j]->GetMSS()->getDt();
 			}
 
-			for (int j = 0; j < nMuscles; j++)
+			for (int j = 0; j < nMuscles; j++) 
 			{
 				m_pParticleSystem->m_MSSmuscles[j]->GetMSS()->setDt(minDt);
 				m_pParticleSystem->m_MSSmuscles[j]->GetMSS()->NextStepPositions();
@@ -1503,7 +1505,7 @@ void medVMEMuscleWrapper::DeformMuscleMMSS()
 			m_pParticleSystem->m_MSSmuscles[j]->ResetCollisions(); // prepare for collision processing
 		}
 
-		ProcessCollisions(0, nMuscles,
+		ProcessCollisions(0, nMuscles, 
 #if defined(_MSC_VER) && _MSC_VER >= 1600 
 			m_pParticleSystem->m_MSSmuscles.data()
 #else
@@ -1523,7 +1525,7 @@ void medVMEMuscleWrapper::DeformMuscleMMSS()
 
 		for (int j = 0; j < nMuscles; j++)
 			m_pParticleSystem->m_MSSmuscles[j]->ProcessCollisions(); // invalidate the collisions
-	}
+	}	
 #pragma endregion
 
 	//store the result into internal structures
@@ -1533,15 +1535,15 @@ void medVMEMuscleWrapper::DeformMuscleMMSS()
 		m_pParticleSystem->m_MSSmuscles[i]->SetOutput(NULL);	//wrapper->detach m_pDeformedMuscle
 
 		//update positions
-		medVMEMuscleWrapper* wrapper = m_pParticleSystem->m_MuscleWrappers_CP[i];
+		medVMEMuscleWrapper* wrapper = m_pParticleSystem->m_MuscleWrappers_CP[i];							
 		m_pParticleSystem->m_MSSmuscles[i]->GetParticles(wrapper->m_Particles);
 
 		//Now, we need to transform m_pDeformedMuscle mesh and m_Particles from the absolute (common)
 		//coordinate space into the local space of the wrapper (unless the wrapper's space is the same)		
-		const mafMatrix* inMatrix = this->GetVMEAbsMatrix(wrapper);
+		const mafMatrix* inMatrix = medVMEMuscleWrappingHelper::GetVMEAbsMatrix(wrapper);
 		wrapper->TransformPoints(wrapper->m_pDeformedMuscle->GetPoints(), inMatrix);
 		wrapper->TransformParticles(wrapper->m_Particles, inMatrix);
-	}
+	}	
 
 	for (int i = 0; i < nBones; i++){
 		transforms[i]->Delete();
@@ -1552,7 +1554,7 @@ void medVMEMuscleWrapper::DeformMuscleMMSS()
 //Generates fibers for the given muscle
 //m_pDeformedMuscle -> m_pDecomposedMuscle
 void medVMEMuscleWrapper::GenerateFibers()
-//------------------------------------------------------------------------
+	//------------------------------------------------------------------------
 {
 	if (m_DecompositionMethod == GF_UFP)
 	{
@@ -1632,7 +1634,7 @@ void medVMEMuscleWrapper::GenerateFibers()
 #ifdef _DEBUG_VIS_
 	int DebugMode = m_FbDebugShowTemplate*vtkMAFMuscleDecomposition::dbgDoNotProjectFibres |
 		m_FbDebugShowFitting*vtkMAFMuscleDecomposition::dbgVisualizeFitting |
-		m_FbDebugShowFittingRes*vtkMAFMuscleDecomposition::dbgVisualizeFittingResult |
+		m_FbDebugShowFittingRes*vtkMAFMuscleDecomposition::dbgVisualizeFittingResult | 
 		m_FbDebugShowSlicing*vtkMAFMuscleDecomposition::dbgVisualizeSlicing |
 		m_FbDebugShowSlicingRes*vtkMAFMuscleDecomposition::dbgVisualizeSlicingResult |
 		m_FbDebugShowOIConstruction*vtkMAFMuscleDecomposition::dbgVisualizeAttachmentConstruction
@@ -1697,16 +1699,16 @@ void medVMEMuscleWrapper::GenerateFibers()
 
 
 	vtkDEL(ori_points);
-	vtkDEL(ins_points);
+	vtkDEL(ins_points); 
 
 	pFibres->Delete();
 
 #ifdef _FIBRES_LENGTS_OUTPUT_	
-Fibres_Lengths :
+Fibres_Lengths:
 	FILE* fProf;
 	if (
 #if _MSC_VER >= 1400
-		0 == (fopen_s(&fProf,
+		0 == (fopen_s(&fProf, 
 #else
 		NULL != (fProf = fopen(
 #endif
@@ -1721,7 +1723,7 @@ Fibres_Lengths :
 			m_pDecomposedMuscle->GetCellPoints(i, nPts, pPts);
 
 			double dblLen = 0.0;
-			for (int j = 1; j < nPts; j++)
+			for (int j = 1; j < nPts; j++) 
 			{
 				double A[3], B[3];
 				m_pDecomposedMuscle->GetPoint(pPts[j - 1], A);
@@ -1729,7 +1731,7 @@ Fibres_Lengths :
 				dblLen += sqrt(vtkMath::Distance2BetweenPoints(A, B));
 			}
 
-			_ftprintf(fProf, "%s\t%.3f\t#%d\t%.2f mm\n",
+			_ftprintf(fProf, "%s\t%.3f\t#%d\t%.2f mm\n", 
 				this->GetName(), this->GetTimeStamp(), i, dblLen);
 
 		}

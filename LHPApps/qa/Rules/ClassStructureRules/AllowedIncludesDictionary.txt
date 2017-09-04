@@ -1,2 +1,0 @@
-mafDecl.h
-mafConfigure.h
