@@ -26,7 +26,7 @@ VTK_MODULE_INIT(vtkRenderingOpenGL);
 using namespace std;
 
 //setting the cache capacity to 200MB
-#define CACHE_CAPACITY 200000000
+#define DECIM_CACHE_CAPACITY 200000000
 #include "CachingFilter.h"
 #include "CacheUtils.h"
 
@@ -55,7 +55,7 @@ public:
 /**
 this class represents a caching version of a vtkDecimatePro filter class
 */
-class CachingDecimator : public vtkDecimatePro, public CachingFilter<CachingDecimator>
+class CachingDecimator : public vtkDecimatePro, public CachingFilter<CachingDecimator, DECIM_CACHE_CAPACITY>
 {
 protected:
 	//equalFunction of the input object

@@ -8,19 +8,11 @@
 #include <mutex>
 #include <vector>
 
-/*
-the CACHE_CAPACITY macro defines the cache's capacity in bytes
-to change the capacity this macro must be redefined before any caching filter is created and before this file is included
-or its value in this file can be changed
-*/
-#ifndef CACHE_CAPACITY
-#define CACHE_CAPACITY 1000000000
-#endif
-
 /**
 this class represents the caching extension for vtk filters
+CACHE_CAPACITY defines the cache's capacity in bytes
 */
-template <class FilterClass>
+template <class FilterClass, size_t CACHE_CAPACITY = 1000000000>
 class CachingFilter
 {
 protected:
@@ -32,12 +24,12 @@ protected:
 	/**
 	stack of filters for possible recursive calls
 	*/
-	static std::vector<CachingFilter<FilterClass>*> filterStack;
+	static std::vector<CachingFilter<FilterClass, CACHE_CAPACITY>*> filterStack;
 
 	/**
 	the current caching filter to call the data manipulation functions on
 	*/
-	static CachingFilter<FilterClass>* currentCachingFilter;
+	static CachingFilter<FilterClass, CACHE_CAPACITY>* currentCachingFilter;
 
 	/**
 	the caching object
@@ -352,33 +344,33 @@ public:
 	virtual ~CachingFilter();
 };
 
-template <class FilterClass>
-std::recursive_mutex CachingFilter<FilterClass>::mutex;// = std::recursive_mutex();
+template <class FilterClass, size_t CACHE_CAPACITY>
+std::recursive_mutex CachingFilter<FilterClass, CACHE_CAPACITY>::mutex;// = std::recursive_mutex();
 
-template <class FilterClass>
-std::vector<CachingFilter<FilterClass>*> CachingFilter<FilterClass>::filterStack = std::vector<CachingFilter<FilterClass>*>();
+template <class FilterClass, size_t CACHE_CAPACITY>
+std::vector<CachingFilter<FilterClass, CACHE_CAPACITY>*> CachingFilter<FilterClass, CACHE_CAPACITY>::filterStack = std::vector<CachingFilter<FilterClass, CACHE_CAPACITY>*>();
 
-template <class FilterClass>
-CachingFilter<FilterClass>* CachingFilter<FilterClass>::currentCachingFilter = nullptr;
+template <class FilterClass, size_t CACHE_CAPACITY>
+CachingFilter<FilterClass, CACHE_CAPACITY>* CachingFilter<FilterClass, CACHE_CAPACITY>::currentCachingFilter = nullptr;
 
-template <class FilterClass>
-void CachingFilter<FilterClass>::setThisTheCurrentFilter()
+template <class FilterClass, size_t CACHE_CAPACITY >
+void CachingFilter<FilterClass, CACHE_CAPACITY>::setThisTheCurrentFilter()
 {
 	mutex.lock();
 	filterStack.push_back(this);
 	currentCachingFilter = this;
 }
 
-template <class FilterClass>
-void CachingFilter<FilterClass>::unsetThisTheCurrentFilter()
+template <class FilterClass, size_t CACHE_CAPACITY>
+void CachingFilter<FilterClass, CACHE_CAPACITY>::unsetThisTheCurrentFilter()
 {
 	filterStack.pop_back();
 	currentCachingFilter = filterStack.empty() ? nullptr : filterStack.back();
 	mutex.unlock();
 }
 
-template <class FilterClass>
-CachingFilter<FilterClass>::~CachingFilter()
+template <class FilterClass, size_t CACHE_CAPACITY>
+CachingFilter<FilterClass, CACHE_CAPACITY>::~CachingFilter()
 {
 	mutex.lock();
 	CacheManagerSource::cacheInstanceCounter--;
@@ -390,8 +382,8 @@ CachingFilter<FilterClass>::~CachingFilter()
 	}
 }
 
-template <class FilterClass>
-int CachingFilter<FilterClass>::RequestDataCaching(vtkInformation* request,
+template <class FilterClass, size_t CACHE_CAPACITY>
+int CachingFilter<FilterClass, CACHE_CAPACITY>::RequestDataCaching(vtkInformation* request,
 	vtkInformationVector** inputVector, vtkInformationVector* outputVector)
 {
 	setThisTheCurrentFilter();
