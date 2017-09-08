@@ -33,7 +33,7 @@ using namespace std;
 #define EXPERIMENT_IVAPP
 #ifdef EXPERIMENT_IVAPP
 #define TEST_CASES			1000	//number of test cases, i.e., repetition of the call
-#define CACHE_HIT_FACTOR	2000	//every CACHE_HIT_FACTOR-th test case will cause cache hit  
+#define CACHE_HIT_FACTOR	 500	//every CACHE_HIT_FACTOR-th test case will cause cache hit  
 									//i.e., value 1 = 100% cache hit, value > TEST_CASES = 100% cache miss
 #include <chrono>
 #endif
@@ -62,14 +62,65 @@ public:
 
 #ifdef EXPERIMENT_IVAPP
 static int callCount = 0;
+static int cacheHitCount = 0;
+static int cacheMissCount = 0;
 #endif
 
 /**
 this class represents a caching version of a vtkDecimatePro filter class
 */
-class CachingDecimator : public vtkDecimatePro, public CachingFilter<CachingDecimator, DECIM_CACHE_CAPACITY>
+class CachingDecimator : public CachingFilter<CachingDecimator, vtkDecimatePro, DECIM_CACHE_CAPACITY>
 {
-protected:
+public:
+	vtkTypeMacro(CachingDecimator, vtkDecimatePro);
+
+protected:	
+	//equalFunction of filter configuration parameters		
+	virtual bool filterEqualsFunction(CachingDecimator* filter1, CachingDecimator* filter2)
+	{	
+		//vtkDecimatePro has conditional configuration:
+		//parameter					[preconditions]
+		//--------------------------------------------
+		//TargetReduction
+		//PreserveTopology
+		//FeatureAngle
+		//Splitting					[PreserveTopology OFF]
+		//SplitAngle				[Splitting ON]
+		//PreSplitMesh				[Splitting ON]
+		//MaximumError				[ErrorIsAbsolute OFF]
+		//AccumulateError
+		//ErrorIsAbsolute
+		//AbsoluteError				[ErrorIsAbsolute ON]
+		//BoundaryVertexDeletion
+		//Degree
+		//InflectionPointRatio
+		//OutputPointsPrecision
+
+		
+
+
+		//bool ret = filter1->GetTargetReduction() == filter2->GetTargetReduction() &&
+		//	filter1->GetPreserveTopology() == filter2->GetPreserveTopology() &&
+		//	filter1->GetFeatureAngle() == filter2->GetFeatureAngle() &&
+		//	filter1->GetSplitting() == filter2->GetSplitting();
+
+		//if (filter1->GetErrorIsAbsolute() != filter2->GetErrorIsAbsolute()) {
+		//	return false;
+		//}
+		//
+		//if (filter1->GetErrorIsAbsolute())
+		//{
+		//	ret = filter1->GetAbsoluteError() == 
+		//}
+		//else
+		//{
+		//	
+		//}
+
+
+		return true;
+	}
+
 	//equalFunction of the input object
 	bool inputEqualsFunction(vtkInformationVector** a, vtkInformationVector** b)
 	{
@@ -80,10 +131,16 @@ protected:
 		return CacheUtils::CacheEquals(inputPoly1, inputPoly2); //using the predefined comparator from CacheUtils
 #else
 		bool ret = CacheUtils::CacheEquals(inputPoly1, inputPoly2); //using the predefined comparator from CacheUtils
-		if (((++callCount) % CACHE_HIT_FACTOR) == 0)
+		if (((++callCount) % CACHE_HIT_FACTOR) == 0) 
+		{
+			if (ret) cacheHitCount++; else cacheMissCount++;
 			return ret;
+		}
 		else
+		{
+			cacheMissCount++;
 			return false;
+		}
 #endif
 	}
 
@@ -167,42 +224,21 @@ protected:
 	/**************************************************/
 
 
-
-	//static wrapper for the RequestData method
-	static int staticRequestData(CachingDecimator* decimator, vtkInformation* request,
-		vtkInformationVector** inputVector, vtkInformationVector* outputVector)
+protected:	
+	CachingDecimator()
 	{
-#ifndef EXPERIMENT_IVAPP
-		cout << "CALLING" << endl;  //"CALLING" is printed when the original RequestData method from vtkDecimatePro is realy called
-									//if this line is not printet thogether with "REQUESTING DATA" it means the output was cached		
-#endif
-		return decimator->vtkDecimatePro::RequestData(request, inputVector, outputVector); //using the original RequestData method to generate the ouput
-	}
 
-	//overriden RequestData method
-	int RequestData(vtkInformation* request,
-		vtkInformationVector** inputVector, vtkInformationVector* outputVector)
-	{
-#ifndef EXPERIMENT_IVAPP
-		cout <<"REQUESTING DATA" << endl;  //"REQUESTING DATA" is printed when the data is requested
-#endif
-		return RequestDataCaching(request, inputVector, outputVector); //using the caching version of RequestData from CachingFilter class
 	}
 
 public:
-	//the constructor needs to pass the staticRequestData method to the CachingFilter constructor
-	CachingDecimator() : CachingFilter(staticRequestData)
-	{
-
-	}
-
-	static CachingDecimator* New()
-	{
-		CachingDecimator* dec = new CachingDecimator;
-		dec->InitializeObjectBase();
-		return dec;
-	}
+	static CachingDecimator* New();	
+	
+private:
+		CachingDecimator(const CachingDecimator&) VTK_DELETE_FUNCTION;
+		void operator=(const CachingDecimator&) VTK_DELETE_FUNCTION;
 };
+
+vtkStandardNewMacro(CachingDecimator);
 
 
 /*
@@ -260,6 +296,8 @@ int main(int argc, char* argv[])
 	auto mcs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
 	cout << "Run finished in " << mcs.count() << " ms\n";
+	cout << "Cache hit count = " << cacheHitCount << "("
+		<< (cacheHitCount * 100.0 / (cacheHitCount + cacheMissCount)) << "%)";
 #endif
 
 
