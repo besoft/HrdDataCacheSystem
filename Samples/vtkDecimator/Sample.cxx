@@ -30,6 +30,14 @@ using namespace std;
 #include "CachingFilter.h"
 #include "CacheUtils.h"
 
+#define EXPERIMENT_IVAPP
+#ifdef EXPERIMENT_IVAPP
+#define TEST_CASES			1000	//number of test cases, i.e., repetition of the call
+#define CACHE_HIT_FACTOR	2000	//every CACHE_HIT_FACTOR-th test case will cause cache hit  
+									//i.e., value 1 = 100% cache hit, value > TEST_CASES = 100% cache miss
+#include <chrono>
+#endif
+
 class RenderCommand : public vtkCommand
 {
 private:
@@ -52,6 +60,10 @@ public:
 	}
 };
 
+#ifdef EXPERIMENT_IVAPP
+static int callCount = 0;
+#endif
+
 /**
 this class represents a caching version of a vtkDecimatePro filter class
 */
@@ -64,7 +76,15 @@ protected:
 		//getting the input data
 		vtkPolyData* inputPoly1 = vtkPolyData::GetData(a[0]);
 		vtkPolyData* inputPoly2 = vtkPolyData::GetData(b[0]);
+#ifndef EXPERIMENT_IVAPP
 		return CacheUtils::CacheEquals(inputPoly1, inputPoly2); //using the predefined comparator from CacheUtils
+#else
+		bool ret = CacheUtils::CacheEquals(inputPoly1, inputPoly2); //using the predefined comparator from CacheUtils
+		if (((++callCount) % CACHE_HIT_FACTOR) == 0)
+			return ret;
+		else
+			return false;
+#endif
 	}
 
 	//hashFunction of the input object
@@ -152,8 +172,10 @@ protected:
 	static int staticRequestData(CachingDecimator* decimator, vtkInformation* request,
 		vtkInformationVector** inputVector, vtkInformationVector* outputVector)
 	{
+#ifndef EXPERIMENT_IVAPP
 		cout << "CALLING" << endl;  //"CALLING" is printed when the original RequestData method from vtkDecimatePro is realy called
-									//if this line is not printet thogether with "REQUESTING DATA" it means the output was cached
+									//if this line is not printet thogether with "REQUESTING DATA" it means the output was cached		
+#endif
 		return decimator->vtkDecimatePro::RequestData(request, inputVector, outputVector); //using the original RequestData method to generate the ouput
 	}
 
@@ -161,7 +183,9 @@ protected:
 	int RequestData(vtkInformation* request,
 		vtkInformationVector** inputVector, vtkInformationVector* outputVector)
 	{
+#ifndef EXPERIMENT_IVAPP
 		cout <<"REQUESTING DATA" << endl;  //"REQUESTING DATA" is printed when the data is requested
+#endif
 		return RequestDataCaching(request, inputVector, outputVector); //using the caching version of RequestData from CachingFilter class
 	}
 
@@ -169,6 +193,7 @@ public:
 	//the constructor needs to pass the staticRequestData method to the CachingFilter constructor
 	CachingDecimator() : CachingFilter(staticRequestData)
 	{
+
 	}
 
 	static CachingDecimator* New()
@@ -221,6 +246,23 @@ int main(int argc, char* argv[])
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 
 	renderWindowInteractor->Initialize();
+
+#ifdef EXPERIMENT_IVAPP
+	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+	start = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < TEST_CASES; i++)
+	{
+		trans->Modified();
+		filter->Update();
+	}
+
+	end = std::chrono::high_resolution_clock::now();
+	auto mcs = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+	cout << "Run finished in " << mcs.count() << " ms\n";
+#endif
+
+
 	renderWindowInteractor->CreateRepeatingTimer(1);
 	RenderCommand* renderCallback = RenderCommand::New(trans);
 	renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, renderCallback);
