@@ -45,7 +45,7 @@ protected:
 	unsets this the currentCachingFilter
 	*/
 	void unsetThisTheCurrentFilter();
-
+	
 	/**
 	constructor for initialization
 	*/
@@ -133,8 +133,8 @@ protected:
 	}
 
 	/**
-	this method defines how to compute the request's size in bytes
-	this method should be overridden by the user if the request is considered as an input argument
+	this method defines how to compute the request's size in bytes	
+	this method should be overridden only if the request is considered as an input argument	
 	*/
 	virtual uint64_t requestGetSizeFunction(vtkInformation* request)
 	{
@@ -143,20 +143,24 @@ protected:
 
 	/**
 	this method defines how to compute the input argument's size in bytes
-	this method should be overridden by the user
+	usually there is no need to override this method
 	*/
 	virtual uint64_t inputGetSizeFunction(vtkInformationVector** input)
 	{
-		return 0;
+		//each filter may have multiple input ports and 
+		//each port may have multiple input objects
+
+		int ports = this->GetNumberOfInputPorts();
+		return CacheUtils::CacheGetDataObjectSize(input, ports);
 	}
 
 	/**
 	this method defines how to compute the output's argument size in bytes (after filling it with the output data)
-	this method should be overridden by the user
+	usually there is no need to override this method
 	*/
 	virtual uint64_t outputGetSizeFunction(vtkInformationVector* output)
 	{
-		return 0;
+		return CacheUtils::CacheGetDataObjectSize(output);
 	}
 
 	/**

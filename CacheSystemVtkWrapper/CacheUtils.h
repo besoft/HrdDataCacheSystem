@@ -9,6 +9,8 @@
 #include <vtkStructuredGrid.h>
 #include <vtkImageData.h>
 
+class vtkInformation;
+
 /**
 this class contais predefined data manipulation functions for the most commonly used data types in VTK
 */
@@ -84,6 +86,18 @@ public:
 	this function calculates size in bytes of an instance of vtkDataObject
 	*/
 	static uint64_t CacheGetSize(vtkDataObject* obj);
+
+	/** 
+	Gets the overall size of all data objects present in the given array of information vectors 
+	Size of all other metadata is not calculated.
+	*/
+	static uint64_t CacheGetDataObjectSize(vtkInformationVector** a, int n);
+
+	/** 
+	Gets the overall size of all data objects present in the given array of information vectors .
+	Size of all other metadata is not calculated.
+	*/
+	static uint64_t CacheGetDataObjectSize(vtkInformationVector* a);
 
 	/**
 	this function calculates the hash of an instance of vtkAbstractArray

@@ -1,4 +1,7 @@
 #include "CacheUtils.h"
+#include "vtkInformation.h"
+#include "vtkInformationVector.h"
+
 #include <math.h>
 #include <memory>
 
@@ -182,10 +185,35 @@ uint64_t CacheUtils::CacheGetSize(vtkDataObject* obj)
 	return obj->GetActualMemorySize() * 1024;
 }
 
+uint64_t CacheUtils::CacheGetDataObjectSize(vtkInformationVector** a, int n)
+{
+	uint64_t sizeRet = 0;
+	for (int i = 0; i < n; i++) {
+		sizeRet += CacheGetDataObjectSize(a[i]);
+	}
+
+	return sizeRet;
+}
+
+uint64_t CacheUtils::CacheGetDataObjectSize(vtkInformationVector* a)
+{
+	uint64_t sizeRet = 0;
+
+	int n = a->GetNumberOfInformationObjects();
+	for (int j = 0; j < n; j++)
+	{
+		vtkInformation* info = a->GetInformationObject(j);
+		vtkDataObject* o = info->Get(vtkDataObject::DATA_OBJECT());
+		sizeRet += CacheUtils::CacheGetSize(o);  //gets the size in bytes using the predefined function from CacheUtils
+	}
+
+	return sizeRet;
+}
+
 uint32_t CacheUtils::CacheHash(vtkAbstractArray* arr)
 {
 	typedef float DataType;
-	int size = arr->GetDataSize() - sizeof(DataType);
+	int size = (int)(arr->GetDataSize() - sizeof(DataType));
 	if (size < 4)
 		return 0;
 	DataType* values[15] = {
