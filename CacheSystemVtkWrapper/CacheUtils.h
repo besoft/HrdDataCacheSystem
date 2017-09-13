@@ -8,8 +8,9 @@
 #include <vtkDataSetAttributes.h>
 #include <vtkStructuredGrid.h>
 #include <vtkImageData.h>
+#include <vtkInformationVector.h>
 
-class vtkInformation;
+
 
 /**
 this class contais predefined data manipulation functions for the most commonly used data types in VTK
@@ -58,9 +59,50 @@ public:
 	static void CacheInit(vtkDataObject* source, vtkDataObject* & dataToInit);	
 
 	/**
+	initialize dataToInit array and deep copies the data from the source to it
+	\param n number of entries in the source array of information vectors
+	*/
+	static void CacheInit(vtkInformationVector** source, vtkInformationVector**& dataToInit, int n)
+	{
+		dataToInit = new vtkInformationVector*;
+		for (int i = 0; i < n; i++) {
+			CacheInit(source[i], dataToInit[i]);
+		}
+	}
+
+	/**
+	initialize dataToInit array and deep copies the data from the source to it	
+	*/
+	static void CacheInit(vtkInformationVector* source, vtkInformationVector*& dataToInit);	
+
+	/**
 	this function destroys an instance of vtkDataObject
 	*/
-	static void CacheDestroy(vtkDataObject* obj);
+	static void CacheDestroy(vtkDataObject* obj)
+	{
+		if (obj != nullptr)
+			obj->Delete();
+	}
+
+	/**
+	this function destroys an array of information vectors
+	*/
+	static void CacheDestroy(vtkInformationVector** infoVecs, int n)
+	{
+		for (int i = 0; i < n; i++) {
+			CacheDestroy(infoVecs[i]);
+		}
+
+		delete[] infoVecs;
+	}
+
+	/**
+	this function destroys an information vector
+	*/
+	static void CacheDestroy(vtkInformationVector* infoVec)
+	{
+		infoVec->Delete();
+	}
 
 	/**
 	this function calculates size in bytes of an instance of vtkDataObject
@@ -70,14 +112,15 @@ public:
 	/** 
 	Gets the overall size of all data objects present in the given array of information vectors 
 	Size of all other metadata is not calculated.
+	\param n number of entries in the passed array of information vectors
 	*/
-	static uint64_t CacheGetDataObjectSize(vtkInformationVector** a, int n);
+	static uint64_t CacheGetSize(vtkInformationVector** a, int n);
 
 	/** 
 	Gets the overall size of all data objects present in the given array of information vectors .
 	Size of all other metadata is not calculated.
 	*/
-	static uint64_t CacheGetDataObjectSize(vtkInformationVector* a);
+	static uint64_t CacheGetSize(vtkInformationVector* a);
 
 	/**
 	this function calculates the hash of an instance of vtkAbstractArray

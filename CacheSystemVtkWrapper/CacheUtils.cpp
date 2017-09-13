@@ -1,6 +1,5 @@
 #include "CacheUtils.h"
 #include "vtkInformation.h"
-#include "vtkInformationVector.h"
 
 #include <math.h>
 #include <memory>
@@ -134,10 +133,27 @@ void CacheUtils::CacheInit(vtkDataObject* source, vtkDataObject* & dataToInit)
 	dataToInit->DeepCopy(source);
 }
 
-void CacheUtils::CacheDestroy(vtkDataObject* obj)
+void CacheUtils::CacheInit(vtkInformationVector* source, vtkInformationVector*& dataToInit)
 {
-	if (obj != nullptr)
-		obj->Delete();
+	dataToInit = source->NewInstance();
+	dataToInit->Copy(source, 1);			//copies everything
+
+	//BES: 13.9.2017 - current implementation of Copy method does not perform
+	//deep copying of the data, which is what we need => we need to do it ourselves
+	int n = source->GetNumberOfInformationObjects();
+	for (int j = 0; j < n; j++)
+	{
+		vtkInformation* info = source->GetInformationObject(j);
+		vtkDataObject* o = info->Get(vtkDataObject::DATA_OBJECT());
+		
+		vtkDataObject* oDest;
+		CacheInit(o, oDest);
+
+		info = dataToInit->GetInformationObject(j);
+		info->Set(vtkDataObject::DATA_OBJECT(), oDest);
+
+		oDest->UnRegister(nullptr);	//no longer needed
+	}
 }
 
 uint64_t CacheUtils::CacheGetSize(vtkDataObject* obj)
@@ -145,17 +161,17 @@ uint64_t CacheUtils::CacheGetSize(vtkDataObject* obj)
 	return obj->GetActualMemorySize() * 1024;
 }
 
-uint64_t CacheUtils::CacheGetDataObjectSize(vtkInformationVector** a, int n)
+uint64_t CacheUtils::CacheGetSize(vtkInformationVector** a, int n)
 {
 	uint64_t sizeRet = 0;
 	for (int i = 0; i < n; i++) {
-		sizeRet += CacheGetDataObjectSize(a[i]);
+		sizeRet += CacheGetSize(a[i]);
 	}
 
 	return sizeRet;
 }
 
-uint64_t CacheUtils::CacheGetDataObjectSize(vtkInformationVector* a)
+uint64_t CacheUtils::CacheGetSize(vtkInformationVector* a)
 {
 	uint64_t sizeRet = 0;
 

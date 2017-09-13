@@ -151,7 +151,7 @@ protected:
 		//each port may have multiple input objects
 
 		int ports = this->GetNumberOfInputPorts();
-		return CacheUtils::CacheGetDataObjectSize(input, ports);
+		return CacheUtils::CacheGetSize(input, ports);
 	}
 
 	/**
@@ -160,7 +160,7 @@ protected:
 	*/
 	virtual uint64_t outputGetSizeFunction(vtkInformationVector* output)
 	{
-		return CacheUtils::CacheGetDataObjectSize(output);
+		return CacheUtils::CacheGetSize(output);
 	}
 
 	/**
@@ -177,30 +177,35 @@ protected:
 	*/
 	virtual void requestInitFunction(vtkInformation* source, vtkInformation* & destination)
 	{
+		destination = nullptr;
 	}
 
 	/**
 	this method defines how the input argument should be copied into the cache
-	this method should be overridden by the user
+	usually there is no need for the user to override this method
 	*/
 	virtual void inputInitFunction(vtkInformationVector** source, vtkInformationVector** & destination)
 	{
+		int ports = this->GetNumberOfInputPorts();
+		CacheUtils::CacheInit(source, destination, ports);
 	}
 
 	/**
 	this method defines how the output argument should be copied into the cache (after filling it with the output data)
-	this method should be overridden by the user
+	usually there is no need for the user to override this method
 	*/
 	virtual void outputInitFunction(vtkInformationVector* source, vtkInformationVector* & destination)
 	{
+		CacheUtils::CacheInit(source, destination);
 	}
 
 	/**
 	this method defines how the output value should be copied from the cache into the output argument
-	this method should be overridden by the user
+	usually there is no need for the user to override this method
 	*/
 	virtual void outputCopyOutFunction(vtkInformationVector* storedValuePointer, vtkInformationVector* & outputPointer)
 	{
+		outputPointer->Copy(storedValuePointer);
 	}
 
 	/**
@@ -213,26 +218,31 @@ protected:
 
 	/**
 	this method defines how the request should be destroyed when removed from the cache
-	this method should be overridden by the user
+	usually there is no need for the user to override this method
 	*/
 	virtual void requestDestroyFunction(vtkInformation* request)
 	{
+		if (request != nullptr)
+			request->Delete();
 	}
 
 	/**
 	this method defines how the input argument should be destroyed when removed from the cache
-	this method should be overridden by the user
+	usually there is no need for the user to override this method
 	*/
 	virtual void inputDestroyFunction(vtkInformationVector** input)
 	{
+		int ports = this->GetNumberOfInputPorts();
+		CacheUtils::CacheDestroy(input, ports);
 	}
 
 	/**
 	this method defines how the output argument should be destroyed when removed from the cache
-	this method should be overridden by the user
+	usually there is no need for the user to override this method
 	*/
 	virtual void outputDestroyFunction(vtkInformationVector* output)
 	{
+		CacheUtils::CacheDestroy(output);
 	}
 
 
