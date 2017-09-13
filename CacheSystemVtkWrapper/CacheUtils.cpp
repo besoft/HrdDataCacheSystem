@@ -119,57 +119,17 @@ bool CacheUtils::CacheEquals(vtkImageData* data1, vtkImageData* data2)
 		CacheEquals((vtkDataSetAttributes*)data1->GetCellData(), (vtkDataSetAttributes*)data2->GetCellData());
 }
 
-void CacheUtils::CacheInit(vtkPolyData* source, vtkPolyData* & dataToInit)
+void CacheUtils::CacheInit(vtkDataObject* source, vtkDataObject* & dataToInit)
 {
 	if (source == nullptr)
 	{
 		dataToInit = nullptr;
 		return;
 	}
-	dataToInit = source->NewInstance();
-	dataToInit->DeepCopy(source);
-}
 
-void CacheUtils::CacheInit(vtkUnstructuredGrid* source, vtkUnstructuredGrid* & dataToInit)
-{
-	if (source == nullptr)
-	{
-		dataToInit = nullptr;
-		return;
-	}
-	dataToInit = source->NewInstance();
-	dataToInit->DeepCopy(source);
-}
-
-void CacheUtils::CacheInit(vtkRectilinearGrid* source, vtkRectilinearGrid* & dataToInit)
-{
-	if (source == nullptr)
-	{
-		dataToInit = nullptr;
-		return;
-	}
-	dataToInit = source->NewInstance();
-	dataToInit->DeepCopy(source);
-}
-
-void CacheUtils::CacheInit(vtkStructuredGrid* source, vtkStructuredGrid* & dataToInit)
-{
-	if (source == nullptr)
-	{
-		dataToInit = nullptr;
-		return;
-	}
-	dataToInit = source->NewInstance();
-	dataToInit->DeepCopy(source);
-}
-
-void CacheUtils::CacheInit(vtkImageData* source, vtkImageData* & dataToInit)
-{
-	if (source == nullptr)
-	{
-		dataToInit = nullptr;
-		return;
-	}
+	//BES: 13.9.2017 - NewInstance method calls the protected virtual NewInstanceInternal
+	//method which ensures that we will get an instance of the correct derived type 
+	//and since DeepCopy is a virtual method we well get the correct copy
 	dataToInit = source->NewInstance();
 	dataToInit->DeepCopy(source);
 }

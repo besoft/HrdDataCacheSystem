@@ -53,29 +53,9 @@ public:
 	static bool CacheEquals(vtkImageData* data1, vtkImageData* data2);
 
 	/**
-	this function copies one instance of vtkPolyData to another
+	this function copies one instance of vtkDataObject
 	*/
-	static void CacheInit(vtkPolyData* source, vtkPolyData* & dataToInit);
-
-	/**
-	this function copies one instance of vtkUnstructuredGrid to another
-	*/
-	static void CacheInit(vtkUnstructuredGrid* source, vtkUnstructuredGrid* & dataToInit);
-
-	/**
-	this function copies one instance of vtkRectilinearGrid to another
-	*/
-	static void CacheInit(vtkRectilinearGrid* source, vtkRectilinearGrid* & dataToInit);
-
-	/**
-	this function copies one instance of vtkStructuredGrid to another
-	*/
-	static void CacheInit(vtkStructuredGrid* source, vtkStructuredGrid* & dataToInit);
-
-	/**
-	this function copies one instance of vtkImageData to another
-	*/
-	static void CacheInit(vtkImageData* source, vtkImageData* & dataToInit);
+	static void CacheInit(vtkDataObject* source, vtkDataObject* & dataToInit);	
 
 	/**
 	this function destroys an instance of vtkDataObject
