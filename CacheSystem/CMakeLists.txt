@@ -19,6 +19,7 @@ SET(PROJECT_SRCS
 	CachePolicy.h
 	DefaultCachePolicy.cpp
 	DefaultCachePolicy.h
+	Hash.h
 	LFUCachePolicy.cpp
 	LFUCachePolicy.h
 	ParameterInfo.h
@@ -30,7 +31,6 @@ SET(PROJECT_SRCS
 	StandardEqualFunctions.h
 	StandardGetSizeFunctions.cpp
 	StandardGetSizeFunctions.h
-	StandardHashFunctions.cpp
 	StandardHashFunctions.h
 	StandardInitFunctions.cpp
 	StandardInitFunctions.h

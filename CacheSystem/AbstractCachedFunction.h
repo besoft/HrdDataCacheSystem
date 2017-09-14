@@ -7,8 +7,9 @@
 #include "CacheConfiguration.h"
 #include "CacheDataStructure.h"
 
+
 namespace CacheSystem
-{	
+{
 	class CachedFunctionManager;
 	/**
 	manages the caching and contains all the cached data
@@ -69,24 +70,24 @@ namespace CacheSystem
 		/**
 		recursively iterates through all parameters passed as otherParams and calculates the hash value of all input parameters
 		*/
-		template <class FirstType, class... OtherTypes> uint64_t calculateHash(int paramIndex, int inputParamIndex, const FirstType & firstParam,
+		template <class FirstType, class... OtherTypes> size_t calculateHash(int paramIndex, const FirstType & firstParam,
 			const OtherTypes &... otherParams);
 
 		/**
 		stops the recursion of calculateHash
 		*/
-		template <class Type> uint64_t calculateHash(int paramIndex, int inputParamIndex, const Type & param);
+		template <class Type> size_t calculateHash(int paramIndex, const Type & param);
 
 		/**
 		recursively iterates through all parameters passed as otherParams and calculates the sum of their sizes
 		*/
-		template <class FirstType, class... OtherTypes> uint64_t calculateSize(int paramIndex, const FirstType & firstParam,
+		template <class FirstType, class... OtherTypes> size_t calculateSize(int paramIndex, const FirstType & firstParam,
 			const OtherTypes &... otherParams);
 
 		/**
 		stops the recursion of calculateSize
 		*/
-		template <class Type> uint64_t calculateSize(int paramIndex, const Type & param);
+		template <class Type> size_t calculateSize(int paramIndex, const Type & param);
 
 		/**
 		creates the object, the conf object is copied
@@ -142,60 +143,44 @@ namespace CacheSystem
 	*/
 	template <class ReturnType, class... ParamTypes>
 	template <class FirstType, class... OtherTypes> uint64_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex,
-		int inputParamIndex, const FirstType & firstParam, const OtherTypes &... otherParams)
+		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{
-		uint64_t hash = 0;
-		TypedParameterInfo<FirstType>* paramInfo = (TypedParameterInfo<FirstType>*)conf.getParamsInfo()[paramIndex].get();
-		if (paramInfo->paramType == ParameterType::InputParam)
-		{
-			inputParamIndex++;
-			hash = inputParamIndex * paramInfo->hashFunction(firstParam, conf.getDependencyObject());
-		}
-		return hash + calculateHash(paramIndex + 1, inputParamIndex, otherParams...);
+		return hash_combine_hvs(calculateHash(paramIndex, firstParam),
+			calculateHash(paramIndex + 1, otherParams...));
 	}
 
 	/**
 	stops the recursion of calculateHash
 	*/
 	template <class ReturnType, class... ParamTypes>
-	template <class Type> uint64_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex, int inputParamIndex,
-		const Type & param)
-	{
-		uint64_t hash = 0;
+	template <class Type> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex, const Type & param)
+	{		
 		TypedParameterInfo<Type>* paramInfo = (TypedParameterInfo<Type>*)conf.getParamsInfo()[paramIndex].get();
 		if (paramInfo->paramType == ParameterType::InputParam)
-		{
-			inputParamIndex++;
-			hash = inputParamIndex * paramInfo->hashFunction(param, conf.getDependencyObject());
-		}
-		return hash;
-	}
+			return paramInfo->hashFunction(param, conf.getDependencyObject());
+		return 0;		
+	}	
 
 	/**
 	recursively iterates through all parameters passed as otherParams and calculates the sum of their sizes
 	*/
 	template <class ReturnType, class... ParamTypes>
-	template <class FirstType, class... OtherTypes> uint64_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateSize(int paramIndex,
+	template <class FirstType, class... OtherTypes> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateSize(int paramIndex,
 		const FirstType & firstParam, const OtherTypes &... otherParams)
-	{
-		uint64_t size = 0;
-		TypedParameterInfo<FirstType>* paramInfo = (TypedParameterInfo<FirstType>*)conf.getParamsInfo()[paramIndex].get();
-		if (paramInfo->paramType != ParameterType::IgnoredParam)
-			size += paramInfo->getSizeFunction(firstParam, conf.getDependencyObject());
-		return size + calculateSize(paramIndex + 1, otherParams...);
+	{		
+		return calculateSize(paramIndex, firstParam) + calculateSize(paramIndex + 1, otherParams...);
 	}
 
 	/**
 	stops the recursion of calculateSize
 	*/
 	template <class ReturnType, class... ParamTypes>
-	template <class Type> uint64_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateSize(int paramIndex, const Type & param)
-	{
-		uint64_t size = 0;
+	template <class Type> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateSize(int paramIndex, const Type & param)
+	{		
 		TypedParameterInfo<Type>* paramInfo = (TypedParameterInfo<Type>*)conf.getParamsInfo()[paramIndex].get();
 		if (paramInfo->paramType != ParameterType::IgnoredParam)
-			size += paramInfo->getSizeFunction(param, conf.getDependencyObject());
-		return size;
+			return paramInfo->getSizeFunction(param, conf.getDependencyObject());
+		return 0;
 	}
 }
 

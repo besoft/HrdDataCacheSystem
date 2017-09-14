@@ -5,7 +5,7 @@ namespace CacheSystem
 {
 	namespace CachePolicies
 	{
-		void DefaultCachePolicy::dataCreationEvent(uint64_t dataId, uint64_t dataSize, int64_t dataCreationTime)
+		void DefaultCachePolicy::dataCreationEvent(uint64_t dataId, size_t dataSize, int64_t dataCreationTime)
 		{
 			CacheData* data = (CacheData*)dataId;
 			PolicyData* policyData = new PolicyData;
@@ -18,7 +18,7 @@ namespace CacheSystem
 			dataCount++;
 		}
 
-		void DefaultCachePolicy::cacheHitEvent(uint64_t dataId, uint64_t dataSize, int64_t dataCreationTime)
+		void DefaultCachePolicy::cacheHitEvent(uint64_t dataId, size_t dataSize, int64_t dataCreationTime)
 		{
 			CacheData* data = (CacheData*)dataId;
 			PolicyData* policyData = (PolicyData*)data->getUserData();
@@ -28,7 +28,7 @@ namespace CacheSystem
 			timeStamp++;
 		}
 
-		void DefaultCachePolicy::cacheMissEvent(uint64_t dataId, uint64_t dataSize, int64_t dataCreationTime)
+		void DefaultCachePolicy::cacheMissEvent(uint64_t dataId, size_t dataSize, int64_t dataCreationTime)
 		{
 			CacheData* data = (CacheData*)dataId;
 			PolicyData* policyData = (PolicyData*)data->getUserData();
@@ -36,7 +36,7 @@ namespace CacheSystem
 			policyData->lastPriorityCalculation = timeStamp;
 		}
 
-		double DefaultCachePolicy::getPriority(uint64_t dataId, uint64_t dataSize, int64_t dataCreationTime)
+		double DefaultCachePolicy::getPriority(uint64_t dataId, size_t dataSize, int64_t dataCreationTime)
 		{
 			CacheData* data = (CacheData*)dataId;
 			PolicyData* policyData = (PolicyData*)data->getUserData();

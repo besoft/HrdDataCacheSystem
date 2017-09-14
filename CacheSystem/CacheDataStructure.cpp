@@ -2,7 +2,7 @@
 
 namespace CacheSystem
 {
-	void CacheDataStructure::addCacheData(uint64_t hash, std::shared_ptr<CacheData> data)
+	void CacheDataStructure::addCacheData(size_t hash, std::shared_ptr<CacheData> data)
 	{
 		if (cacheData.count(hash) == 0)
 			cacheData[hash] = std::vector<std::shared_ptr<CacheData> >();

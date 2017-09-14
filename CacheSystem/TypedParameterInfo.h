@@ -10,6 +10,7 @@
 #include "StandardOutputFunctions.h"
 #include "StandardHashFunctions.h"
 #include "StandardGetSizeFunctions.h"
+#include "Hash.h"
 
 namespace CacheSystem
 {
@@ -63,19 +64,22 @@ namespace CacheSystem
 		for primitive types it can be empty
 
 		but do not do this:
-		delete &value; //the memory is delocated automatically
+		delete &value; //the memory is deallocated automatically
 		*/
 		void(*destroyFunction)(Type &, void*);
 
 		/**
 		pointer to a function that defines how a hash value of the parameter is calculated
+		if the parameter is composed of several items, one may calculate the hash
+		value for each of them and combine the hashes together using the helper function
+		hash_combine_hashcodes
 		*/
-		uint32_t(*hashFunction)(const Type &, void*);
+		size_t (*hashFunction)(const Type &, void*);
 
 		/**
 		pointer to a function that defines how a size of the parameter is calculated
 		*/
-		uint64_t(*getSizeFunction)(const Type &, void*);
+		size_t (*getSizeFunction)(const Type &, void*);
 
 		/**
 		creates the object and sets function pointers to standard values and parameter type to Input
@@ -91,8 +95,8 @@ namespace CacheSystem
 			void(*initFunction)(const Type &, Type*, void*),
 			void(*outputFunction)(const Type &, Type &, void*),
 			void(*destroyFunction)(Type &, void*),
-			uint32_t(*hashFunction)(const Type &, void*),
-			uint64_t(*getSizeFunction)(const Type &, void*)
+			size_t(*hashFunction)(const Type &, void*),
+			size_t(*getSizeFunction)(const Type &, void*)
 			);
 
 		/**
@@ -120,8 +124,8 @@ namespace CacheSystem
 		void(*initFunction)(const Type &, Type*, void*),
 		void(*outputFunction)(const Type &, Type &, void*),
 		void(*destroyFunction)(Type &, void*),
-		uint32_t(*hashFunction)(const Type &, void*),
-		uint64_t(*getSizeFunction)(const Type &, void*)
+		size_t(*hashFunction)(const Type &, void*),
+		size_t(*getSizeFunction)(const Type &, void*)
 		) :
 		ParameterInfo(paramType),
 		equalFunction(equalFunction),

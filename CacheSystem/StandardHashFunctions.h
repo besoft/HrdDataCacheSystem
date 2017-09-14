@@ -3,57 +3,54 @@
 
 #include <string>
 #include <exception>
+#include <functional>
 #include <stdint.h>
 
 namespace CacheSystem
 {
 	namespace StandardFunctions
 	{
+		//to combine hashes CacheSystem::hash_combine_hsv function can be used
+
 		/**
 		no generic standardHashFunction available
 		only throws exception
 		*/
-		template <class Type> uint32_t standardHashFunction(const Type & value, void* dependencyObject)
+		template <class Type> size_t standardHashFunction(const Type & value, void* dependencyObject)
 		{
 			std::string message = "No standardHashFunction available for type ";
 			std::string type = std::string(typeid(Type).name());
 			throw std::exception((message + type).c_str());
 		}
 
-		/**
-		returns the value casted to uint32_t
-		*/
-		template <> uint32_t standardHashFunction(const int & value, void*);
 
-		/**
-		returns the value casted to uint32_t
-		*/
-		template <> uint32_t standardHashFunction(const unsigned int & value, void*);
+#define STD_HASHFUNC_SPECIALIZE(type) \
+		template <> inline size_t standardHashFunction(const type& value, void*) \
+		{ \
+			return std::hash<type>{}(value);\
+		}
 
-		/**
-		returns the value casted to uint32_t
-		*/
-		template <> uint32_t standardHashFunction(const char & value, void*);
+		STD_HASHFUNC_SPECIALIZE(bool);
+		STD_HASHFUNC_SPECIALIZE(char);
+		STD_HASHFUNC_SPECIALIZE(signed char);
+		STD_HASHFUNC_SPECIALIZE(unsigned char);
+		STD_HASHFUNC_SPECIALIZE(wchar_t);
 
-		/**
-		returns the sum of the string's characters casted to uint32_t
-		*/
-		template <> uint32_t standardHashFunction(const std::string & value, void*);
+		STD_HASHFUNC_SPECIALIZE(short);
+		STD_HASHFUNC_SPECIALIZE(unsigned short);
+		STD_HASHFUNC_SPECIALIZE(int);
+		STD_HASHFUNC_SPECIALIZE(unsigned int);
+		STD_HASHFUNC_SPECIALIZE(long);
+		STD_HASHFUNC_SPECIALIZE(unsigned long);
+		STD_HASHFUNC_SPECIALIZE(unsigned long long);
 
-		/**
-		returns the value multiplied by 1000 casted to uint32_t
-		*/
-		template <> uint32_t standardHashFunction(const double & value, void*);
+		STD_HASHFUNC_SPECIALIZE(float);
+		STD_HASHFUNC_SPECIALIZE(double);
+		STD_HASHFUNC_SPECIALIZE(long double);
 
-		/**
-		returns the value multiplied by 1000 casted to uint32_t
-		*/
-		template <> uint32_t standardHashFunction(const float & value, void*);
+		STD_HASHFUNC_SPECIALIZE(std::string);
 
-		/**
-		returns the value casted to uint32_t
-		*/
-		template <> uint32_t standardHashFunction(const bool & value, void*);
+#undef STD_HASHFUNC_SPECIALIZE
 	}
 }
 

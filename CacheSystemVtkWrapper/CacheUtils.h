@@ -8,9 +8,8 @@
 #include <vtkDataSetAttributes.h>
 #include <vtkStructuredGrid.h>
 #include <vtkImageData.h>
+#include <vtkInformation.h>
 #include <vtkInformationVector.h>
-
-
 
 /**
 this class contais predefined data manipulation functions for the most commonly used data types in VTK
@@ -107,55 +106,88 @@ public:
 	/**
 	this function calculates size in bytes of an instance of vtkDataObject
 	*/
-	static uint64_t CacheGetSize(vtkDataObject* obj);
+	static size_t CacheGetSize(vtkDataObject* obj);
 
 	/** 
 	Gets the overall size of all data objects present in the given array of information vectors 
 	Size of all other metadata is not calculated.
 	\param n number of entries in the passed array of information vectors
 	*/
-	static uint64_t CacheGetSize(vtkInformationVector** a, int n);
+	static size_t CacheGetSize(vtkInformationVector** a, int n);
 
 	/** 
 	Gets the overall size of all data objects present in the given array of information vectors .
 	Size of all other metadata is not calculated.
 	*/
-	static uint64_t CacheGetSize(vtkInformationVector* a);
+	static size_t CacheGetSize(vtkInformationVector* a);
+
+
+	/**
+	this function calculates the hash of the given array of information vectors 
+	N.B. this is a general function with performance impact and, therefore,
+	its use should be avoided, if possible
+	\param n number of entries in the passed array of information vectors
+	*/
+	static size_t CacheHash(vtkInformationVector** infoVecs, int n);
+
+	/**
+	this function calculates the hash of the given information vector
+	N.B. this is a general function with performance impact and, therefore,
+	its use should be avoided, if possible	
+	*/
+	static size_t CacheHash(vtkInformationVector* infoVec);	
+
+	/**
+	this function calculates the hash of the vtkDataObject
+	N.B. this is a general function with performance impact and, therefore,
+	its use should be avoided, if possible
+	*/
+	static size_t CacheHash(vtkDataObject* o);
+
+	/**
+	this function calculates the hash of an instance of vtkDataSet
+	*/
+	static size_t CacheHash(vtkDataSet* o);
 
 	/**
 	this function calculates the hash of an instance of vtkAbstractArray
 	*/
-	static uint32_t CacheHash(vtkAbstractArray* arr);
+	static size_t CacheHash(vtkAbstractArray* arr);
 
 	/**
-	this function calculates the hash of an instance of vtkDataSetAttributes
+	this function calculates the hash of an instance of vtkFieldData (and vtkDataSetAttributes)
 	*/
-	static uint32_t CacheHash(vtkDataSetAttributes* arr);
+	static size_t CacheHash(vtkFieldData* arr);
+
+	/**
+	this function calculates the hash of an instance of vtkPointSet
+	*/
+	static size_t CacheHash(vtkPointSet* data);
 
 	/**
 	this function calculates the hash of an instance of vtkPolyData
 	*/
-	static uint32_t CacheHash(vtkPolyData* data);
+	static size_t CacheHash(vtkPolyData* data);
 
 	/**
 	this function calculates the hash of an instance of vtkUnstructuredGrid
 	*/
-	static uint32_t CacheHash(vtkUnstructuredGrid* data);
+	static size_t CacheHash(vtkUnstructuredGrid* data);
 
 	/**
 	this function calculates the hash of an instance of vtkRectilinearGrid
 	*/
-	static uint32_t CacheHash(vtkRectilinearGrid* data);
+	static size_t CacheHash(vtkRectilinearGrid* data);
 
 	/**
 	this function calculates the hash of an instance of vtkStructuredGrid
 	*/
-	static uint32_t CacheHash(vtkStructuredGrid* data);
+	static size_t CacheHash(vtkStructuredGrid* data);
 
 	/**
 	this function calculates the hash of an instance of vtkImageData
 	*/
-	static uint32_t CacheHash(vtkImageData* data);
+	static size_t CacheHash(vtkImageData* data);
 };
 
 #endif

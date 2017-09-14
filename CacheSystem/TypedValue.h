@@ -5,7 +5,7 @@
 namespace CacheSystem
 {
 	/**
-	represents a conrete cached value
+	represents a concrete cached value
 	Type is the type of the value
 	*/
 	template <class Type>
@@ -23,7 +23,7 @@ namespace CacheSystem
 		void(*destroyFunction)(Type &, void*);
 
 		/**
-		pointer to the dependecy object
+		pointer to the dependency object
 		*/
 		void* dependencyObject;
 

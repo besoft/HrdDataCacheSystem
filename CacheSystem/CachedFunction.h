@@ -25,7 +25,7 @@ namespace CacheSystem
 		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
-		uint64_t hash = calculateHash(0, 0, params...);
+		size_t hash = calculateHash(0, params...);
 		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);  //find data for given input
 		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get();
 		if (data == nullptr) //if there are no data for given input
@@ -36,7 +36,7 @@ namespace CacheSystem
 			ReturnType returnValue = function(params...);
 			QueryPerformanceCounter((LARGE_INTEGER*)&t2);
 			int64_t creationTime = (t2 - t1) / cpuTicksPerMs;
-			uint64_t dataSize = calculateSize(0, params...);
+			size_t dataSize = calculateSize(0, params...);
 			if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
 				dataSize += returnInfo->getSizeFunction(returnValue, conf.getDependencyObject());
 			if (creationTime < conf.getMinimumDataCreationTime() ||   //if the data were created too quickly
@@ -81,7 +81,7 @@ namespace CacheSystem
 		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
-		uint64_t hash = calculateHash(0, 0, params...);
+		size_t hash = calculateHash(0, params...);
 		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);
 		if (data == nullptr) //if there are no data for given input
 		{
@@ -91,7 +91,7 @@ namespace CacheSystem
 			function(params...);
 			QueryPerformanceCounter((LARGE_INTEGER*)&t2);
 			int64_t creationTime = (t2 - t1) / cpuTicksPerMs;
-			uint64_t dataSize = calculateSize(0, params...);
+			size_t dataSize = calculateSize(0, params...);
 			if (creationTime < conf.getMinimumDataCreationTime() ||  //if the data were created too quickly
 				dataSize > conf.getMaximumDataSize() || dataSize > manager->getCacheCapacity()) //or the data is too big
 			{
@@ -113,7 +113,7 @@ namespace CacheSystem
 			*dataInCacheIndicator = true;  //the data is stored
 		manager->getCachePolicy()->hitData(data.get());
 		manager->performCacheMissEvents();
-		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output praramters of this method
+		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output parameters of this method
 	}
 }
 

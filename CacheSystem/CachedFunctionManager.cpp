@@ -4,7 +4,7 @@ namespace CacheSystem
 {
 	CachedFunctionManager::~CachedFunctionManager()
 	{
-		for (unsigned int i = 0; i < cachedFunctions.size(); i++)
+		for (size_t i = 0; i < cachedFunctions.size(); i++)
 		{
 			cachedFunctions[i]->resetDataIterator();
 			CacheData* data;
@@ -35,12 +35,12 @@ namespace CacheSystem
 		return candidate;
 	}
 
-	void CachedFunctionManager::makeSpace(uint64_t bytes)
+	void CachedFunctionManager::makeSpace(size_t bytes)
 	{
 		while (conf.getCacheCapacity() - spaceTaken < bytes)
 		{
 			CacheData* evictionCandidate = getEvictionCandidate();
-			uint64_t candidateSize = evictionCandidate->getSize();
+			size_t candidateSize = evictionCandidate->getSize();
 			policy->evictData(evictionCandidate);
 			evictionCandidate->getCachedFunction()->removeData(evictionCandidate);
 			spaceTaken -= candidateSize;
@@ -51,7 +51,7 @@ namespace CacheSystem
 	{
 		if (conf.getUseCacheMissEvent())
 		{
-			for (unsigned int i = 0; i < cachedFunctions.size(); i++)
+			for (size_t i = 0; i < cachedFunctions.size(); i++)
 			{
 				cachedFunctions[i]->resetDataIterator();
 				CacheData* data;

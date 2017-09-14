@@ -1,5 +1,8 @@
 #include "CacheUtils.h"
+#include "Hash.h"
 #include "vtkInformation.h"
+#include "vtkPointData.h"
+#include "vtkCellData.h"
 
 #include <math.h>
 #include <memory>
@@ -156,14 +159,14 @@ void CacheUtils::CacheInit(vtkInformationVector* source, vtkInformationVector*& 
 	}
 }
 
-uint64_t CacheUtils::CacheGetSize(vtkDataObject* obj)
+size_t CacheUtils::CacheGetSize(vtkDataObject* obj)
 {
 	return obj->GetActualMemorySize() * 1024;
 }
 
-uint64_t CacheUtils::CacheGetSize(vtkInformationVector** a, int n)
+size_t CacheUtils::CacheGetSize(vtkInformationVector** a, int n)
 {
-	uint64_t sizeRet = 0;
+	size_t sizeRet = 0;
 	for (int i = 0; i < n; i++) {
 		sizeRet += CacheGetSize(a[i]);
 	}
@@ -171,9 +174,9 @@ uint64_t CacheUtils::CacheGetSize(vtkInformationVector** a, int n)
 	return sizeRet;
 }
 
-uint64_t CacheUtils::CacheGetSize(vtkInformationVector* a)
+size_t CacheUtils::CacheGetSize(vtkInformationVector* a)
 {
-	uint64_t sizeRet = 0;
+	size_t sizeRet = 0;
 
 	int n = a->GetNumberOfInformationObjects();
 	for (int j = 0; j < n; j++)
@@ -186,7 +189,115 @@ uint64_t CacheUtils::CacheGetSize(vtkInformationVector* a)
 	return sizeRet;
 }
 
-uint32_t CacheUtils::CacheHash(vtkAbstractArray* arr)
+size_t CacheUtils::CacheHash(vtkInformationVector** infoVecs, int n)
+{
+	size_t hash = 0;
+	for (int i = 0; i < n; i++) {
+		CacheSystem::hash_combine_hvs(hash, CacheHash(infoVecs[i]));
+	}
+
+	return hash;
+}
+
+size_t CacheUtils::CacheHash(vtkInformationVector* infoVec)
+{
+	size_t hash = 0;
+	int n = infoVec->GetNumberOfInformationObjects();
+	for (int i = 0; i < n; i++)
+	{
+		CacheSystem::hash_combine_hvs(hash,
+			CacheHash(infoVec->GetInformationObject(i)
+				->Get(vtkDataObject::DATA_OBJECT())));
+	}
+	return hash;
+}
+
+/**
+this function calculates the hash of the vtkDataObject
+N.B. this is a general function with performance impact and, therefore,
+its use should be avoided, if possible
+*/
+size_t CacheUtils::CacheHash(vtkDataObject* o)
+{
+	//detect the concrete class of o and use the
+	//predefined implementation for it, if available
+	//the order of tests is by their frequencies of use
+
+	switch (o->GetDataObjectType())
+	{
+	case VTK_POLY_DATA:
+		return CacheHash(vtkPolyData::SafeDownCast(o));
+			
+	case VTK_STRUCTURED_POINTS:	//vtkStructuredPoints is in fact vtkImageData	
+		return CacheHash(vtkImageData::SafeDownCast(o));
+	
+	case VTK_STRUCTURED_GRID:
+		return CacheHash(vtkStructuredGrid::SafeDownCast(o));	
+		
+	case VTK_RECTILINEAR_GRID:
+		return CacheHash(vtkRectilinearGrid::SafeDownCast(o));
+
+	case VTK_UNSTRUCTURED_GRID:
+		return CacheHash(vtkUnstructuredGrid::SafeDownCast(o));	
+	
+	case VTK_IMAGE_DATA:
+		return CacheHash(vtkImageData::SafeDownCast(o));			
+
+	case VTK_DATA_OBJECT:
+		break;	//processed later in this method
+
+	case VTK_DATA_SET:
+		return CacheHash(vtkDataSet::SafeDownCast(o));
+
+	case VTK_POINT_SET:
+		return CacheHash(vtkPointSet::SafeDownCast(o));
+
+	case VTK_UNIFORM_GRID:		//vtkUniformGrid is in fact vtkImageData
+		return CacheHash(vtkImageData::SafeDownCast(o));
+			
+	case VTK_UNSTRUCTURED_GRID_BASE:	//there is no difference in comparison with vtkPointSet
+		return CacheHash(vtkPointSet::SafeDownCast(o));
+			
+	case VTK_HYPER_OCTREE:		
+	case VTK_HYPER_TREE_GRID:	//not supported but nearest is vtkDataSet
+		CacheHash(vtkDataSet::SafeDownCast(o));
+
+	case VTK_PATH:					//VTK_PATH is in fact VTK_POINT_SET
+		return CacheHash(vtkPointSet::SafeDownCast(o));		
+
+	default:
+		//not supported data types are to be processed as vtkDataObject
+		//case VTK_TEMPORAL_DATA_SET:		//no longer used
+		//case VTK_GRAPH:					//derived from VTK_DATA_OBJECT
+		//case VTK_DIRECTED_GRAPH:			//derived from VTK_GRAPH
+		//case VTK_UNDIRECTED_GRAPH:		//derived from VTK_GRAPH
+		//case VTK_TREE:					//derived from VTK_DIRECTED_ACYCLIC_GRAPH
+		//case VTK_SELECTION:				//derived from VTK_DATA_OBJECT
+		//case VTK_MULTIPIECE_DATA_SET:		//derived in fact from VTK_COMPOSITE_DATA_SET
+		//case VTK_DIRECTED_ACYCLIC_GRAPH:	//derived from VTK_DIRECTED_GRAPH 
+		//case VTK_ARRAY_DATA:				//derived from VTK_DATA_OBJECT
+		//case VTK_REEB_GRAPH:				//derived in fact from VTK_DIRECTED_GRAPH
+		//case VTK_UNIFORM_GRID_AMR:		//derived from VTK_COMPOSITE_DATA_SET
+		//case VTK_NON_OVERLAPPING_AMR:		//derived from VTK_UNIFORM_GRID_AMR
+		//case VTK_OVERLAPPING_AMR:			//derived from VTK_UNIFORM_GRID_AMR
+		//case VTK_MOLECULE:				//derived from VTK_UNDIRECTED_GRAPH
+		//case VTK_PISTON_DATA_OBJECT:		//no longer used
+		//case VTK_COMPOSITE_DATA_SET:		//there is no difference in comparison with vtkDataObject
+		//case VTK_PIECEWISE_FUNCTION:		//derived from VTK_DATA_OBJECT
+		//case VTK_MULTIGROUP_DATA_SET:		//no longer exist
+		//case VTK_MULTIBLOCK_DATA_SET:		//derived in fact from VTK_COMPOSITE_DATA_SET
+		//case VTK_HIERARCHICAL_DATA_SET:	//no longer exist	
+		//case VTK_HIERARCHICAL_BOX_DATA_SET:		//derived from VTK_OVERLAPPING_AMR
+		//case VTK_TABLE:					//derived from VTK_DATA_OBJECT
+		//case VTK_GENERIC_DATA_SET:		//derived from VTK_DATA_OBJECT
+		//case VTK_DATA_OBJECT:
+		break;
+	}
+
+	return CacheHash(o->GetFieldData());
+}
+
+size_t CacheUtils::CacheHash(vtkAbstractArray* arr)
 {
 	typedef float DataType;
 	int size = (int)(arr->GetDataSize() - sizeof(DataType));
@@ -207,45 +318,69 @@ uint32_t CacheUtils::CacheHash(vtkAbstractArray* arr)
 	for (int i = 0; i < 15; i++)
 		hash += std::frexp(*values[i], &dummy);
 	hash *= 10e8;
-	return (uint32_t)hash;
+	return (size_t)hash;
 }
 
-uint32_t CacheUtils::CacheHash(vtkDataSetAttributes* data)
+size_t CacheUtils::CacheHash(vtkFieldData* data)
 {
-	uint32_t hash = 0;
+	size_t hash = 0;
 	for (int i = 0; i < data->GetNumberOfArrays(); i++)
 	{
-		hash += CacheHash(data->GetAbstractArray(i));
+		CacheSystem::hash_combine_hvs(hash, CacheHash(data->GetAbstractArray(i)));
 	}
 	return hash;
 }
 
-uint32_t CacheUtils::CacheHash(vtkPolyData* data)
+
+size_t CacheUtils::CacheHash(vtkDataSet* data)
 {
-	return CacheHash(data->GetPoints()->GetData()) + CacheHash(data->GetPolys()->GetData()) + CacheHash(data->GetVerts()->GetData()) +
-		CacheHash(data->GetLines()->GetData()) + CacheHash(data->GetStrips()->GetData()) +
-		CacheHash((vtkDataSetAttributes*)data->GetPointData()) + CacheHash((vtkDataSetAttributes*)data->GetCellData());
+	return
+		CacheSystem::hash_combine_hvs(
+			CacheHash(data->GetPointData()), CacheHash(data->GetCellData())
+		);
 }
 
-uint32_t CacheUtils::CacheHash(vtkUnstructuredGrid* data)
+size_t CacheUtils::CacheHash(vtkPointSet* data)
 {
-	return CacheHash(data->GetPoints()->GetData()) + CacheHash(data->GetCells()->GetData()) +
-		CacheHash((vtkDataSetAttributes*)data->GetPointData()) + CacheHash((vtkDataSetAttributes*)data->GetCellData());
+	return
+		CacheSystem::hash_combine_hvs(
+			CacheHash(data->GetPoints()->GetData()),
+			CacheHash((vtkDataSet*)data)
+		);
 }
 
-uint32_t CacheUtils::CacheHash(vtkRectilinearGrid* data)
+size_t CacheUtils::CacheHash(vtkPolyData* data)
 {
-	return CacheHash(data->GetXCoordinates()) + CacheHash(data->GetYCoordinates()) + CacheHash(data->GetZCoordinates()) +
-		CacheHash((vtkDataSetAttributes*)data->GetPointData()) + CacheHash((vtkDataSetAttributes*)data->GetCellData());
+	return
+		CacheSystem::hash_combine_hvs(
+			CacheHash((vtkPointSet*)data),
+			CacheHash(data->GetPolys()->GetData()), CacheHash(data->GetVerts()->GetData()),
+			CacheHash(data->GetLines()->GetData()), CacheHash(data->GetStrips()->GetData())			
+			);
 }
 
-uint32_t CacheUtils::CacheHash(vtkStructuredGrid* data)
+size_t CacheUtils::CacheHash(vtkUnstructuredGrid* data)
 {
-	return CacheHash(data->GetPoints()->GetData()) +
-		CacheHash((vtkDataSetAttributes*)data->GetPointData()) + CacheHash((vtkDataSetAttributes*)data->GetCellData());
+	return CacheSystem::hash_combine_hvs(
+		CacheHash((vtkPointSet*)data),
+		CacheHash(data->GetCells()->GetData())		
+			);
 }
 
-uint32_t CacheUtils::CacheHash(vtkImageData* data)
+size_t CacheUtils::CacheHash(vtkRectilinearGrid* data)
 {
-	return CacheHash((vtkDataSetAttributes*)data->GetPointData()) + CacheHash((vtkDataSetAttributes*)data->GetCellData());
+	return CacheSystem::hash_combine_hvs(
+		CacheHash(data->GetXCoordinates()), CacheHash(data->GetYCoordinates()), CacheHash(data->GetZCoordinates()),
+		CacheHash((vtkDataSet*)data)
+		);
+}
+
+size_t CacheUtils::CacheHash(vtkStructuredGrid* data)
+{
+	return CacheHash((vtkPointSet*)data);
+}
+
+size_t CacheUtils::CacheHash(vtkImageData* data)
+{
+	return CacheHash((vtkDataSet*)data);
 }

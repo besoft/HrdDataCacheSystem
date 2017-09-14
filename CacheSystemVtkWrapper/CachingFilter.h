@@ -100,7 +100,7 @@ protected:
 	this method defines how to compute the hash of the filter
 	this method should be overridden by the user
 	*/
-	virtual uint32_t filterHashFunction(FilterClass* filter)
+	virtual size_t filterHashFunction(FilterClass* filter)
 	{
 		return 0;
 	}
@@ -109,25 +109,30 @@ protected:
 	this method defines how to compute the hash of the request
 	this method should be overridden by the user, if the request is considered as an input argument
 	*/
-	virtual uint32_t requestHashFunction(vtkInformation* request)
+	virtual size_t requestHashFunction(vtkInformation* request)
 	{
 		return 0;
 	}
 
 	/**
 	this method defines how to compute the hash of the input argument
-	this method should be overridden by the user
+	the default implementation is general and should be sufficient in most cases
+	it is recommended to override this method, if the performance is an issue
 	*/
-	virtual uint32_t inputHashFunction(vtkInformationVector** input)
+	virtual size_t inputHashFunction(vtkInformationVector** input)
 	{
-		return 0;
+		//each filter may have multiple input ports and 
+		//each port may have multiple input objects
+
+		int ports = this->GetNumberOfInputPorts();
+		return CacheUtils::CacheHash(input, ports);
 	}
 
 	/**
 	this method defines how to compute the filter's size in bytes
 	this method should be overridden by the user
 	*/
-	virtual uint64_t filterGetSizeFunction(FilterClass* filter)
+	virtual size_t filterGetSizeFunction(FilterClass* filter)
 	{
 		return 0;
 	}
@@ -136,7 +141,7 @@ protected:
 	this method defines how to compute the request's size in bytes	
 	this method should be overridden only if the request is considered as an input argument	
 	*/
-	virtual uint64_t requestGetSizeFunction(vtkInformation* request)
+	virtual size_t requestGetSizeFunction(vtkInformation* request)
 	{
 		return 0;
 	}
@@ -145,7 +150,7 @@ protected:
 	this method defines how to compute the input argument's size in bytes
 	usually there is no need to override this method
 	*/
-	virtual uint64_t inputGetSizeFunction(vtkInformationVector** input)
+	virtual size_t inputGetSizeFunction(vtkInformationVector** input)
 	{
 		//each filter may have multiple input ports and 
 		//each port may have multiple input objects
@@ -158,7 +163,7 @@ protected:
 	this method defines how to compute the output's argument size in bytes (after filling it with the output data)
 	usually there is no need to override this method
 	*/
-	virtual uint64_t outputGetSizeFunction(vtkInformationVector* output)
+	virtual size_t outputGetSizeFunction(vtkInformationVector* output)
 	{
 		return CacheUtils::CacheGetSize(output);
 	}
@@ -265,37 +270,37 @@ protected:
 		return currentCachingFilter->inputEqualsFunction(input1, input2);
 	}
 
-	static uint32_t filterStaticHashFunction(FilterClass* const & filter, void*)
+	static size_t filterStaticHashFunction(FilterClass* const & filter, void*)
 	{
 		return currentCachingFilter->filterHashFunction(filter);
 	}
 
-	static uint32_t requestStaticHashFunction(vtkInformation* const & request, void*)
+	static size_t requestStaticHashFunction(vtkInformation* const & request, void*)
 	{
 		return currentCachingFilter->requestHashFunction(request);
 	}
 
-	static uint32_t inputStaticHashFunction(vtkInformationVector** const & input, void*)
+	static size_t inputStaticHashFunction(vtkInformationVector** const & input, void*)
 	{
 		return currentCachingFilter->inputHashFunction(input);
 	}
 
-	static uint64_t filterStaticGetSizeFunction(FilterClass* const & filter, void*)
+	static size_t filterStaticGetSizeFunction(FilterClass* const & filter, void*)
 	{
 		return currentCachingFilter->filterGetSizeFunction(filter);
 	}
 
-	static uint64_t requestStaticGetSizeFunction(vtkInformation* const & request, void*)
+	static size_t requestStaticGetSizeFunction(vtkInformation* const & request, void*)
 	{
 		return currentCachingFilter->requestGetSizeFunction(request);
 	}
 
-	static uint64_t inputStaticGetSizeFunction(vtkInformationVector** const & input, void*)
+	static size_t inputStaticGetSizeFunction(vtkInformationVector** const & input, void*)
 	{
 		return currentCachingFilter->inputGetSizeFunction(input);
 	}
 
-	static uint64_t outputStaticGetSizeFunction(vtkInformationVector* const & output, void*)
+	static size_t outputStaticGetSizeFunction(vtkInformationVector* const & output, void*)
 	{
 		return currentCachingFilter->outputGetSizeFunction(output);
 	}

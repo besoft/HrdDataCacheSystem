@@ -41,7 +41,7 @@ namespace CacheSystem
 		/**
 		size of the data in cache
 		*/
-		uint64_t size;
+		size_t size;
 
 		/**
 		user data associated with the data object, it can be anything
@@ -52,7 +52,7 @@ namespace CacheSystem
 		/**
 		the data object's hash value
 		*/
-		uint64_t hash;
+		size_t hash;
 
 		/**
 		the cache object in which this data object is stored
@@ -189,12 +189,12 @@ namespace CacheSystem
 		/**
 		returns size of the data in cache in bytes
 		*/
-		uint64_t getSize() { return size; }
+		size_t getSize() { return size; }
 
 		/**
 		sets size of the data in cache in bytes
 		*/
-		void setSize(uint64_t bytes) { size = bytes; }
+		void setSize(size_t bytes) { size = bytes; }
 
 		/**
 		sets user data associated with the data object, it can be anything
@@ -210,12 +210,12 @@ namespace CacheSystem
 		/**
 		sets the hash value of this data object
 		*/
-		void setHash(uint64_t hash) { this->hash = hash; }
+		void setHash(size_t hash) { this->hash = hash; }
 
 		/**
 		returns this object's hash value
 		*/
-		uint64_t getHash() { return hash; }
+		size_t getHash() { return hash; }
 
 		/**
 		returns the cache object in which the data object is stored

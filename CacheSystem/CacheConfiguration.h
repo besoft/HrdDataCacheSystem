@@ -15,7 +15,7 @@ namespace CacheSystem
 	{
 	private:
 		/**
-		contains information about all parametes
+		contains information about all parameters
 		*/
 		std::vector<std::shared_ptr<ParameterInfo> > paramsInfo;
 
