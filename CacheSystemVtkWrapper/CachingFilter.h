@@ -12,7 +12,7 @@
 this class represents the caching extension for vtk filters
 CACHE_CAPACITY defines the cache's capacity in bytes
 */
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY = 1000000000>
+template <class FilterClass, class SuperClass>
 class CachingFilter : public SuperClass
 {
 protected:
@@ -24,12 +24,12 @@ protected:
 	/**
 	stack of filters for possible recursive calls
 	*/
-	static std::vector<CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>*> filterStack;
+	static std::vector<CachingFilter<FilterClass, SuperClass>*> filterStack;
 
 	/**
 	the current caching filter to call the data manipulation functions on
 	*/
-	static CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>* currentCachingFilter;
+	static CachingFilter<FilterClass, SuperClass>* currentCachingFilter;
 
 	/**
 	the caching object
@@ -56,7 +56,7 @@ protected:
 		if (CacheManagerSource::cacheManager == nullptr)  //the cache manager is created only of it is uninitialized
 		{
 			CacheSystem::CacheManagerConfiguration managerConf;
-			managerConf.setCacheCapacity(CACHE_CAPACITY);
+			managerConf.setCacheCapacity(CacheManagerSource::CACHE_CAPACITY);
 			CacheManagerSource::cacheManager = new CacheSystem::CachedFunctionManager(managerConf);
 		}
 		mutex.unlock();
@@ -67,20 +67,22 @@ protected:
 		conf.setParamInfo(3, CacheSystem::TypedParameterInfo<vtkInformationVector*>(CacheSystem::ParameterType::OutputParam, nullptr, outputStaticInitFunction, outputStaticCopyOutFunction, outputStaticDestroyFunction, nullptr, outputStaticGetSizeFunction));
 		conf.setReturnInfo(CacheSystem::TypedReturnInfo<int>());  //the default constructor uses the standard functions for int (see CacheSystem::StandardFunctions)
 		cachedFunction = CacheManagerSource::cacheManager->createCachedFunction(conf, &staticRequestData);
+
+		this->RequestDataCalls = 0;
+		this->CacheMisses = 0;
 	}
 
 	/**
 	this method defines how two filters should be compared
-	this method should be overridden by the user
+	this method should be always overridden by the user
 	*/
-	virtual bool filterEqualsFunction(FilterClass* filter1, FilterClass* filter2)
-	{
-		return true;
-	}
+	virtual bool filterEqualsFunction(FilterClass* filter1, FilterClass* filter2) = 0;	
 
 	/**
 	this method defines how two requests should be compared
-	this method should be overridden by the user if the request is considered as an input argument
+	this method should be overridden by the user, if the request is considered as an input argument,
+	i.e., the original RequestData method uses information from the request argument in 
+	the preparation of the output data
 	*/
 	virtual bool requestEqualsFunction(vtkInformation* request1, vtkInformation* request2)
 	{
@@ -102,12 +104,11 @@ protected:
 
 	/**
 	this method defines how to compute the hash of the filter
-	this method should be overridden by the user
+	this method should be always overridden by the user
+	it is recommended to implement it to return a hash value
+	of the most commonly changed configuration parameters of the filter
 	*/
-	virtual size_t filterHashFunction(FilterClass* filter)
-	{
-		return 0;
-	}
+	virtual size_t filterHashFunction(FilterClass* filter) = 0;	
 
 	/**
 	this method defines how to compute the hash of the request
@@ -138,7 +139,7 @@ protected:
 	*/
 	virtual size_t filterGetSizeFunction(FilterClass* filter)
 	{
-		return 0;
+		return sizeof(FilterClass);
 	}
 
 	/**
@@ -174,12 +175,18 @@ protected:
 
 	/**
 	this method defines how the filter should be copied into the cache
-	this method should be overridden by the user
+	this method must be overridden by the user, if the filter contains
+	any configuration parameter (may be inherited) that is not of integral type,
+	i.e., some of its configuration parameters is a pointer (or an object),
+	typically declared by vtkSetObjectMacro
 	*/
 	virtual void filterInitFunction(FilterClass* source, FilterClass* & destination)
-	{
+	{		
+		destination = source->NewInstance();
+		memcpy(destination, source, sizeof(*source));
 	}
-
+	
+	
 	/**
 	this method defines how the request should be copied into the cache
 	this method should be overridden by the user if the request is considered an input argument
@@ -219,10 +226,12 @@ protected:
 
 	/**
 	this method defines how the filter should be destroyed when removed from the cache
-	this method should be overridden by the user
+	usually there is no need for the user to override this method
 	*/
 	virtual void filterDestroyFunction(FilterClass* filter)
 	{
+		if (filter != nullptr)
+			filter->Delete();
 	}
 
 	/**
@@ -366,41 +375,47 @@ protected:
 	static int staticRequestData(FilterClass* o, vtkInformation* request,
 		vtkInformationVector** inputVector, vtkInformationVector* outputVector)
 	{
-		return o->SuperClass::RequestData(request, inputVector, outputVector); //using the original RequestData method to generate the ouput
-	}
+		++o->CacheMisses;	//data not found in the cache
+		return o->SuperClass::RequestData(request, inputVector, outputVector); //using the original RequestData method to generate the output
+	}	
 
 	//overridden RequestData method to get the data from the cache, if available
 	/*virtual*/ int RequestData(vtkInformation* request,
 		vtkInformationVector** inputVector, vtkInformationVector* outputVector);
+
+protected:
+	int RequestDataCalls;	//<! number of total calls of RequestData method
+	int CacheMisses;		//<! number of the calls when the data has not been found in cache
+
 };
 
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY>
-std::recursive_mutex CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::mutex;// = std::recursive_mutex();
+template <class FilterClass, class SuperClass>
+std::recursive_mutex CachingFilter<FilterClass, SuperClass>::mutex;// = std::recursive_mutex();
 
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY>
-std::vector<CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>*> CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::filterStack = std::vector<CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>*>();
+template <class FilterClass, class SuperClass>
+std::vector<CachingFilter<FilterClass, SuperClass>*> CachingFilter<FilterClass, SuperClass>::filterStack = std::vector<CachingFilter<FilterClass, SuperClass>*>();
 
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY>
-CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>* CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::currentCachingFilter = nullptr;
+template <class FilterClass, class SuperClass>
+CachingFilter<FilterClass, SuperClass>* CachingFilter<FilterClass, SuperClass>::currentCachingFilter = nullptr;
 
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY >
-void CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::setThisTheCurrentFilter()
+template <class FilterClass, class SuperClass>
+void CachingFilter<FilterClass, SuperClass>::setThisTheCurrentFilter()
 {
 	mutex.lock();
 	filterStack.push_back(this);
 	currentCachingFilter = this;
 }
 
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY>
-void CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::unsetThisTheCurrentFilter()
+template <class FilterClass, class SuperClass>
+void CachingFilter<FilterClass, SuperClass>::unsetThisTheCurrentFilter()
 {
 	filterStack.pop_back();
 	currentCachingFilter = filterStack.empty() ? nullptr : filterStack.back();
 	mutex.unlock();
 }
 
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY>
-CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::~CachingFilter()
+template <class FilterClass, class SuperClass>
+CachingFilter<FilterClass, SuperClass>::~CachingFilter()
 {
 	mutex.lock();
 	CacheManagerSource::cacheInstanceCounter--;
@@ -412,13 +427,15 @@ CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::~CachingFilter()
 	}
 }
 
-template <class FilterClass, class SuperClass, size_t CACHE_CAPACITY>
-int CachingFilter<FilterClass, SuperClass, CACHE_CAPACITY>::RequestData(vtkInformation* request,
+template <class FilterClass, class SuperClass>
+int CachingFilter<FilterClass, SuperClass>::RequestData(vtkInformation* request,
 	vtkInformationVector** inputVector, vtkInformationVector* outputVector)
 {	
 	setThisTheCurrentFilter();
 	int ret = cachedFunction->call((FilterClass*)this, request, inputVector, outputVector);
 	unsetThisTheCurrentFilter();
+	
+	++RequestDataCalls;	//increase the number of counts
 	return ret;
 }
 

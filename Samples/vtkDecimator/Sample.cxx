@@ -22,20 +22,28 @@ VTK_MODULE_INIT(vtkRenderingOpenGL);
 #include <vtkCommand.h>
 #include "CachedFunction.h"
 
+#include "vtkInformationDataObjectKey.h"
+#include "vtkDataObject.h"
+
 #include <iostream>
 using namespace std;
 
-//setting the cache capacity to 200MB
-#define DECIM_CACHE_CAPACITY 200000000
 #include "CachingFilter.h"
 #include "CacheUtils.h"
 
-#define EXPERIMENT_IVAPP
+//#define EXPERIMENT_IVAPP
+
 #ifdef EXPERIMENT_IVAPP
 #define TEST_CASES			1000	//number of test cases, i.e., repetition of the call
-#define CACHE_HIT_FACTOR	 500	//every CACHE_HIT_FACTOR-th test case will cause cache hit  
+#define CACHE_HIT_FACTOR	3  	//every CACHE_HIT_FACTOR-th test case will cause cache hit  
 									//i.e., value 1 = 100% cache hit, value > TEST_CASES = 100% cache miss
+
+//setting the cache capacity to hold just one object (100 KB)
+#define DECIM_CACHE_CAPACITY 100000
 #include <chrono>
+#else
+//setting the cache capacity to 200MB
+#define DECIM_CACHE_CAPACITY 200000000
 #endif
 
 class RenderCommand : public vtkCommand
@@ -67,17 +75,26 @@ static int cacheMissCount = 0;
 #endif
 
 /**
-this class represents a caching version of a vtkDecimatePro filter class
+this class represents a very simple caching version of a vtkDecimatePro filter class
+N.B. this implementation assumes that the configuration of the filter does not change
 */
-class CachingDecimator : public CachingFilter<CachingDecimator, vtkDecimatePro, DECIM_CACHE_CAPACITY>
+class CachingDecimator : public CachingFilter<CachingDecimator, vtkDecimatePro>
 {
 public:
 	vtkTypeMacro(CachingDecimator, vtkDecimatePro);
 
 protected:	
+	
+	//this method defines how to compute the hash of the filter		
+	/*virtual*/ size_t filterHashFunction(CachingDecimator* filter) VTK_OVERRIDE
+	{
+		//TargetReduction is the most commonly changed parameter
+		return std::hash<double>()(filter->GetTargetReduction());
+	}
+
 	//equalFunction of filter configuration parameters		
-	virtual bool filterEqualsFunction(CachingDecimator* filter1, CachingDecimator* filter2)
-	{	
+	/*virtual*/ bool filterEqualsFunction(CachingDecimator* filter1, CachingDecimator* filter2) VTK_OVERRIDE
+	{
 		//vtkDecimatePro has conditional configuration:
 		//parameter					[preconditions]
 		//--------------------------------------------
@@ -96,132 +113,73 @@ protected:
 		//InflectionPointRatio
 		//OutputPointsPrecision
 
-		
 
+		/******************************************************************/
+		// here should come the comparison of vtkDecimatePro configuration 
+		// parameters (see above) with correct handing of preconditions,
+		// i.e., if a parameter is ignored in some state, it should
+		// not be compared.
 
-		//bool ret = filter1->GetTargetReduction() == filter2->GetTargetReduction() &&
-		//	filter1->GetPreserveTopology() == filter2->GetPreserveTopology() &&
-		//	filter1->GetFeatureAngle() == filter2->GetFeatureAngle() &&
-		//	filter1->GetSplitting() == filter2->GetSplitting();
-
-		//if (filter1->GetErrorIsAbsolute() != filter2->GetErrorIsAbsolute()) {
-		//	return false;
-		//}
-		//
-		//if (filter1->GetErrorIsAbsolute())
-		//{
-		//	ret = filter1->GetAbsoluteError() == 
-		//}
-		//else
-		//{
-		//	
-		//}
-
+		//in this simple example, we assume that filter2 = filter1
+		/*****************************************************************/
 
 		return true;
 	}
+	
 
+#ifdef EXPERIMENT_IVAPP
 	//equalFunction of the input object
-	bool inputEqualsFunction(vtkInformationVector** a, vtkInformationVector** b)
-	{
-		//getting the input data
-		vtkPolyData* inputPoly1 = vtkPolyData::GetData(a[0]);
-		vtkPolyData* inputPoly2 = vtkPolyData::GetData(b[0]);
-#ifndef EXPERIMENT_IVAPP
-		return CacheUtils::CacheEquals(inputPoly1, inputPoly2); //using the predefined comparator from CacheUtils
-#else
-		bool ret = CacheUtils::CacheEquals(inputPoly1, inputPoly2); //using the predefined comparator from CacheUtils
-		if (((++callCount) % CACHE_HIT_FACTOR) == 0) 
-		{
-			if (ret) cacheHitCount++; else cacheMissCount++;
-			return ret;
-		}
-		else
-		{
-			cacheMissCount++;
-			return false;
-		}
+	/*virtual*/ bool inputEqualsFunction(vtkInformationVector** a, vtkInformationVector** b) VTK_OVERRIDE
+	{				
+		return CachingFilter<CachingDecimator, vtkDecimatePro>
+			::inputEqualsFunction(a, b) && ((this->RequestDataCalls % CACHE_HIT_FACTOR) == 0);
+	}
 #endif
+
+	//overridden RequestData method to get the data from the cache, if available
+	/*virtual*/ int RequestData(vtkInformation* request,
+		vtkInformationVector** inputVector, vtkInformationVector* outputVector) VTK_OVERRIDE
+	{
+#ifndef EXPERIMENT_IVAPP
+		cout << "REQUESTING DATA: ";  //"REQUESTING DATA" is printed when the data is requested
+#else
+		callCount++;
+#endif
+		int cacheMisses = this->CacheMisses;
+		int ret = CachingFilter<CachingDecimator, vtkDecimatePro>
+			::RequestData(request, inputVector, outputVector);
+		
+		if (cacheMisses != this->CacheMisses)
+#ifndef EXPERIMENT_IVAPP
+			cout << "CACHE MISS" << endl;  //the original RequestData method from vtkDecimatePro is really called										
+#else
+			cacheMissCount++;
+#endif
+		else 
+#ifndef EXPERIMENT_IVAPP
+			cout << "CACHE HIT" << endl;  //the original RequestData method from vtkDecimatePro is really called										
+#else
+			cacheHitCount++;
+#endif
+
+		return ret;
 	}
 
-	//hashFunction of the input object
-	uint32_t inputHashFunction(vtkInformationVector** a)
+	/***	
+	Although the default implementation of inputHashFunction provides
+	a good hash in virtually every case, it is general and thus always 
+	slightly slower than the implementation designed for the concrete class.
+	If the performance is crucial, it is recommended to override the method
+	similarly as shown below.
+
+	//hashFunction of the input object	
+	size_t inputHashFunction(vtkInformationVector** a)
 	{
 		//getting the input data
 		vtkPolyData* inputPoly = vtkPolyData::GetData(a[0]);
 		return CacheUtils::CacheHash(inputPoly); //using the predefined hash function from CacheUtils
 	}
-
-	//getSizeFunction of the input object
-	uint64_t inputGetSizeFunction(vtkInformationVector** a)
-	{
-		vtkPolyData* inputPoly = vtkPolyData::GetData(a[0]);  //getting the input data
-		return CacheUtils::CacheGetSize(inputPoly);  //returns the size in bytes using the predefined function from CacheUtils
-	}
-
-	//getSizeFunction of the output parameter
-	uint64_t outputGetSizeFunction(vtkInformationVector* a)
-	{
-		vtkPolyData* outputPoly = vtkPolyData::GetData(a);  //getting the input data
-		return CacheUtils::CacheGetSize(outputPoly);  //returns the size in bytes using the predefined function from CacheUtils
-	}
-
-	//initFunction of the input parameter (defines how to copy the input data into the cache)
-	void inputInitFunction(vtkInformationVector** source, vtkInformationVector** & destination)
-	{
-		destination = new vtkInformationVector*;
-		*destination = vtkInformationVector::New();  //creates the new object
-		(*destination)->Copy(*source, 1);  //copies the input object into the object in cache
-		vtkPolyData* sourceData = vtkPolyData::GetData(*source);  //getting the input data
-		vtkPolyData* destData;
-		CacheUtils::CacheInit(sourceData, destData); //copying the input data using the predefined function from CacheUtils
-		(*destination)->GetInformationObject(0)->Set(vtkDataObject::DATA_OBJECT(), destData);  //puts the input data into the object in cache
-		destData->Delete();
-	}
-
-	//initFunction of the output parameter (defines hot the newly calculated data is copied into the cache) 
-	void outputInitFunction(vtkInformationVector* source, vtkInformationVector* & destination)
-	{
-		destination = vtkInformationVector::New();  //creates the new object
-		destination->Copy(source, 1);  //copies the input object into the object in cache
-		vtkPolyData* sourceData = vtkPolyData::GetData(source);  //getting the input data
-		vtkPolyData* destData;
-		CacheUtils::CacheInit(sourceData, destData); //copying the data using the predefined function from CacheUtils
-		destination->GetInformationObject(0)->Set(vtkDataObject::DATA_OBJECT(), destData);  //puts the data into the object in cache
-		destData->Delete();
-	}
-
-	//outputFunction for the output parameter (defines how the data is copied from the cache into the output parameter)
-	void outputCopyOutFunction(vtkInformationVector* storedValuePointer, vtkInformationVector* & outputPointer)
-	{
-		outputPointer->Copy(storedValuePointer, 1);
-		vtkPolyData* sourceData = vtkPolyData::GetData(storedValuePointer);  //getting the data
-		vtkPolyData* destData;
-		CacheUtils::CacheInit(sourceData, destData);  //copying the data using the predefined function from CacheUtils
-		outputPointer->GetInformationObject(0)->Set(vtkDataObject::DATA_OBJECT(), destData);  //puts the data into the output parameter
-	}
-
-	//destroyFunction of the input parameter
-	void inputDestroyFunction(vtkInformationVector** data)
-	{
-		(*data)->Delete();
-		delete data;
-	}
-
-	//destroyFunction of the output parameter (defines how the output data is destroyed when it is removed from the cache)
-	void outputDestroyFunction(vtkInformationVector* data)
-	{
-		data->Delete();
-	}
-
-	/**************************************************/
-	/*  In some cases there will be more of the data  */
-	/*   manipulation functions but in this example   */
-	/*     we ignore the request argument of the      */
-	/*   RequestData method and we also ignore the    */
-	/*  filter's configuration so the functions for   */
-	/* these two arguments do not need to be defined  */
-	/**************************************************/
+	*/
 
 
 protected:	
@@ -246,6 +204,12 @@ the main function
 */
 int main(int argc, char* argv[])
 {
+	//set the custom cache capacity, if default value is not sufficient
+	//N.B. this operation must be done before the cache is created, which
+	//is when the first cached class is instantiated
+	CacheManagerSource::CACHE_CAPACITY = DECIM_CACHE_CAPACITY;
+
+
 	vtkSphereSource* sphere = vtkSphereSource::New(); //creates a sphere
 	sphere->SetPhiResolution(30);
 	sphere->SetThetaResolution(30);
