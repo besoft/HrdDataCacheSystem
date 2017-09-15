@@ -1,8 +1,5 @@
 #include "CacheUtils.h"
-#include "Hash.h"
 #include "vtkInformation.h"
-#include "vtkPointData.h"
-#include "vtkCellData.h"
 
 #include <math.h>
 #include <memory>
@@ -150,18 +147,6 @@ bool CacheUtils::CacheEquals(vtkFieldData* data1, vtkFieldData* data2)
 	return true;
 }
 
-bool CacheUtils::CacheEquals(vtkDataSet* data1, vtkDataSet* data2)
-{
-	return CacheEquals(data1->GetPointData(), data2->GetPointData()) &&
-		CacheEquals(data1->GetCellData(), data2->GetCellData());
-}
-
-bool CacheUtils::CacheEquals(vtkPointSet* data1, vtkPointSet* data2)
-{
-	return CacheEquals(data1->GetPoints()->GetData(), data2->GetPoints()->GetData()) &&
-		CacheEquals((vtkDataSet*)data1, (vtkDataSet*)data2);
-}
-
 bool CacheUtils::CacheEquals(vtkPolyData* data1, vtkPolyData* data2)
 {
 	return CacheEquals((vtkPointSet*)data1, (vtkPointSet*)data2) &&
@@ -171,11 +156,6 @@ bool CacheUtils::CacheEquals(vtkPolyData* data1, vtkPolyData* data2)
 		CacheEquals(data1->GetStrips()->GetData(), data2->GetStrips()->GetData());		
 }
 
-bool CacheUtils::CacheEquals(vtkUnstructuredGrid* data1, vtkUnstructuredGrid* data2)
-{
-	return CacheEquals((vtkPointSet*)data1, (vtkPointSet*)data2) &&
-		CacheEquals(data1->GetCells()->GetData(), data2->GetCells()->GetData());		
-}
 
 bool CacheUtils::CacheEquals(vtkRectilinearGrid* data1, vtkRectilinearGrid* data2)
 {
@@ -449,15 +429,6 @@ size_t CacheUtils::CacheHash(vtkFieldData* data)
 	return hash;
 }
 
-
-size_t CacheUtils::CacheHash(vtkDataSet* data)
-{
-	return
-		CacheSystem::hash_combine_hvs(
-			CacheHash(data->GetPointData()), CacheHash(data->GetCellData())
-		);
-}
-
 size_t CacheUtils::CacheHash(vtkPointSet* data)
 {
 	return
@@ -491,14 +462,4 @@ size_t CacheUtils::CacheHash(vtkRectilinearGrid* data)
 		CacheHash(data->GetXCoordinates()), CacheHash(data->GetYCoordinates()), CacheHash(data->GetZCoordinates()),
 		CacheHash((vtkDataSet*)data)
 		);
-}
-
-size_t CacheUtils::CacheHash(vtkStructuredGrid* data)
-{
-	return CacheHash((vtkPointSet*)data);
-}
-
-size_t CacheUtils::CacheHash(vtkImageData* data)
-{
-	return CacheHash((vtkDataSet*)data);
 }

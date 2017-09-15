@@ -10,9 +10,12 @@
 #include <vtkImageData.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
+#include "vtkPointData.h"
+#include "vtkCellData.h"
+#include "Hash.h"
 
 /**
-this class contais predefined data manipulation functions for the most commonly used data types in VTK
+this class contains predefined data manipulation functions for the most commonly used data types in VTK
 */
 class CacheUtils
 {
@@ -52,12 +55,20 @@ public:
 	/**
 	this function compares two instances of vtkDataSet
 	*/
-	static bool CacheEquals(vtkDataSet* data1, vtkDataSet* data2);
+	inline static bool CacheEquals(vtkDataSet* data1, vtkDataSet* data2)
+	{
+		return CacheEquals(data1->GetPointData(), data2->GetPointData()) &&
+			CacheEquals(data1->GetCellData(), data2->GetCellData());
+	}
 
 	/**
 	this function compares two instances of vtkPointSet
 	*/
-	static bool CacheEquals(vtkPointSet* data1, vtkPointSet* data2);
+	inline static bool CacheEquals(vtkPointSet* data1, vtkPointSet* data2)
+	{
+		return CacheEquals(data1->GetPoints()->GetData(), data2->GetPoints()->GetData()) &&
+			CacheEquals((vtkDataSet*)data1, (vtkDataSet*)data2);
+	}
 
 	/**
 	this function compares two instances of vtkPolyData
@@ -67,7 +78,11 @@ public:
 	/**
 	this function compares two instances of vtkUnstructuredGrid
 	*/
-	static bool CacheEquals(vtkUnstructuredGrid* data1, vtkUnstructuredGrid* data2);
+	inline static bool CacheEquals(vtkUnstructuredGrid* data1, vtkUnstructuredGrid* data2)
+	{
+		return CacheEquals((vtkPointSet*)data1, (vtkPointSet*)data2) &&
+			CacheEquals(data1->GetCells()->GetData(), data2->GetCells()->GetData());
+	}
 
 	/**
 	this function compares two instances of vtkRectilinearGrid
@@ -179,7 +194,13 @@ public:
 	/**
 	this function calculates the hash of an instance of vtkDataSet
 	*/
-	static size_t CacheHash(vtkDataSet* o);
+	inline static size_t CacheHash(vtkDataSet* data)
+	{
+		return
+			CacheSystem::hash_combine_hvs(
+				CacheHash(data->GetPointData()), CacheHash(data->GetCellData())
+			);
+	}
 
 	/**
 	this function calculates the hash of an instance of vtkAbstractArray
@@ -214,12 +235,18 @@ public:
 	/**
 	this function calculates the hash of an instance of vtkStructuredGrid
 	*/
-	static size_t CacheHash(vtkStructuredGrid* data);
+	inline static size_t CacheHash(vtkStructuredGrid* data)
+	{
+		return CacheHash((vtkPointSet*)data);
+	}
 
 	/**
 	this function calculates the hash of an instance of vtkImageData
 	*/
-	static size_t CacheHash(vtkImageData* data);
+	inline static size_t CacheHash(vtkImageData* data)
+	{
+		return CacheHash((vtkDataSet*)data);
+	}
 };
 
 #endif
