@@ -18,6 +18,28 @@ class CacheUtils
 {
 public:
 	/**
+	this function compares two arrays of information vectors
+	N.B. this is a general function with performance impact and, therefore,
+	its use should be avoided, if possible
+	\param n number of entries in the passed array of information vectors
+	*/
+	static bool CacheEquals(vtkInformationVector** infoVecs1, vtkInformationVector** infoVecs2, int n);
+
+	/**
+	this function compares two instances of vtkInformationVector
+	N.B. this is a general function with performance impact and, therefore,
+	its use should be avoided, if possible
+	*/
+	static bool CacheEquals(vtkInformationVector* infoVec1, vtkInformationVector* infoVec2);
+
+	/**
+	this function compares two instances of vtkDataObject
+	N.B. this is a general function with performance impact and, therefore,
+	its use should be avoided, if possible
+	*/
+	static bool CacheEquals(vtkDataObject* o1, vtkDataObject* o2);
+
+	/**
 	this function compares two instances of vtkAbstractArray
 	*/
 	static bool CacheEquals(vtkAbstractArray* arr1, vtkAbstractArray* arr2);
@@ -25,7 +47,17 @@ public:
 	/**
 	this function compares two instances of vtkDataSetAttributes
 	*/
-	static bool CacheEquals(vtkDataSetAttributes* data1, vtkDataSetAttributes* data2);
+	static bool CacheEquals(vtkFieldData* data1, vtkFieldData* data2);
+
+	/**
+	this function compares two instances of vtkDataSet
+	*/
+	static bool CacheEquals(vtkDataSet* data1, vtkDataSet* data2);
+
+	/**
+	this function compares two instances of vtkPointSet
+	*/
+	static bool CacheEquals(vtkPointSet* data1, vtkPointSet* data2);
 
 	/**
 	this function compares two instances of vtkPolyData

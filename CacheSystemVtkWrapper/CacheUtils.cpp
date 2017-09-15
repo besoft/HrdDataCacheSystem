@@ -7,6 +7,119 @@
 #include <math.h>
 #include <memory>
 
+bool CacheUtils::CacheEquals(vtkInformationVector** infoVecs1, vtkInformationVector** infoVecs2, int n)
+{	
+	for (int i = 0; i < n; i++) {
+		if (!CacheEquals(infoVecs1[i], infoVecs2[i]))
+			return false;
+	}
+
+	return true;
+}
+
+bool CacheUtils::CacheEquals(vtkInformationVector* infoVec1, vtkInformationVector* infoVec2)
+{	
+	int n = infoVec1->GetNumberOfInformationObjects();
+	if (n != infoVec2->GetNumberOfInformationObjects())
+		return false;
+
+	for (int i = 0; i < n; i++)
+	{
+		vtkDataObject* o1 = infoVec1->GetInformationObject(i)
+			->Get(vtkDataObject::DATA_OBJECT());
+		vtkDataObject* o2 = infoVec1->GetInformationObject(i)
+			->Get(vtkDataObject::DATA_OBJECT());
+
+		if (!CacheEquals(o1, o2))
+			return false;
+	}
+
+	return true;
+}
+
+bool CacheUtils::CacheEquals(vtkDataObject* o1, vtkDataObject* o2)
+{
+	if (o1->GetDataObjectType() != o2->GetDataObjectType())
+		return false;	//o1 and o2 are instances of different classes
+
+	//detect the concrete class of o and use the
+	//predefined implementation for it, if available
+	//the order of tests is by their frequencies of use
+
+	switch (o1->GetDataObjectType())
+	{
+	case VTK_POLY_DATA:
+		return CacheEquals(vtkPolyData::SafeDownCast(o1), vtkPolyData::SafeDownCast(o2));
+
+	case VTK_STRUCTURED_POINTS:	//vtkStructuredPoints is in fact vtkImageData	
+		return CacheEquals(vtkImageData::SafeDownCast(o1), vtkImageData::SafeDownCast(o2));
+
+	case VTK_STRUCTURED_GRID:
+		return CacheEquals(vtkStructuredGrid::SafeDownCast(o1), vtkStructuredGrid::SafeDownCast(o2));
+
+	case VTK_RECTILINEAR_GRID:
+		return CacheEquals(vtkRectilinearGrid::SafeDownCast(o1), vtkRectilinearGrid::SafeDownCast(o2));
+
+	case VTK_UNSTRUCTURED_GRID:
+		return CacheEquals(vtkUnstructuredGrid::SafeDownCast(o1), vtkUnstructuredGrid::SafeDownCast(o2));
+
+	case VTK_IMAGE_DATA:
+		return CacheEquals(vtkImageData::SafeDownCast(o1), vtkImageData::SafeDownCast(o2));
+
+	case VTK_DATA_OBJECT:
+		break;	//processed later in this method
+
+	case VTK_DATA_SET:
+		return CacheEquals(vtkDataSet::SafeDownCast(o1), vtkDataSet::SafeDownCast(o2));
+
+	case VTK_POINT_SET:
+		return CacheEquals(vtkPointSet::SafeDownCast(o1), vtkPointSet::SafeDownCast(o2));
+
+	case VTK_UNIFORM_GRID:		//vtkUniformGrid is in fact vtkImageData
+		return CacheEquals(vtkImageData::SafeDownCast(o1), vtkImageData::SafeDownCast(o2));
+
+	case VTK_UNSTRUCTURED_GRID_BASE:	//there is no difference in comparison with vtkPointSet
+		return CacheEquals(vtkPointSet::SafeDownCast(o1), vtkPointSet::SafeDownCast(o2));
+
+	case VTK_HYPER_OCTREE:
+	case VTK_HYPER_TREE_GRID:	//not supported but nearest is vtkDataSet
+		CacheEquals(vtkDataSet::SafeDownCast(o1), vtkDataSet::SafeDownCast(o2));
+
+	case VTK_PATH:					//VTK_PATH is in fact VTK_POINT_SET
+		return CacheEquals(vtkPointSet::SafeDownCast(o1), vtkPointSet::SafeDownCast(o2));
+
+	default:
+		//not supported data types are to be processed as vtkDataObject
+		//case VTK_TEMPORAL_DATA_SET:		//no longer used
+		//case VTK_GRAPH:					//derived from VTK_DATA_OBJECT
+		//case VTK_DIRECTED_GRAPH:			//derived from VTK_GRAPH
+		//case VTK_UNDIRECTED_GRAPH:		//derived from VTK_GRAPH
+		//case VTK_TREE:					//derived from VTK_DIRECTED_ACYCLIC_GRAPH
+		//case VTK_SELECTION:				//derived from VTK_DATA_OBJECT
+		//case VTK_MULTIPIECE_DATA_SET:		//derived in fact from VTK_COMPOSITE_DATA_SET
+		//case VTK_DIRECTED_ACYCLIC_GRAPH:	//derived from VTK_DIRECTED_GRAPH 
+		//case VTK_ARRAY_DATA:				//derived from VTK_DATA_OBJECT
+		//case VTK_REEB_GRAPH:				//derived in fact from VTK_DIRECTED_GRAPH
+		//case VTK_UNIFORM_GRID_AMR:		//derived from VTK_COMPOSITE_DATA_SET
+		//case VTK_NON_OVERLAPPING_AMR:		//derived from VTK_UNIFORM_GRID_AMR
+		//case VTK_OVERLAPPING_AMR:			//derived from VTK_UNIFORM_GRID_AMR
+		//case VTK_MOLECULE:				//derived from VTK_UNDIRECTED_GRAPH
+		//case VTK_PISTON_DATA_OBJECT:		//no longer used
+		//case VTK_COMPOSITE_DATA_SET:		//there is no difference in comparison with vtkDataObject
+		//case VTK_PIECEWISE_FUNCTION:		//derived from VTK_DATA_OBJECT
+		//case VTK_MULTIGROUP_DATA_SET:		//no longer exist
+		//case VTK_MULTIBLOCK_DATA_SET:		//derived in fact from VTK_COMPOSITE_DATA_SET
+		//case VTK_HIERARCHICAL_DATA_SET:	//no longer exist	
+		//case VTK_HIERARCHICAL_BOX_DATA_SET:		//derived from VTK_OVERLAPPING_AMR
+		//case VTK_TABLE:					//derived from VTK_DATA_OBJECT
+		//case VTK_GENERIC_DATA_SET:		//derived from VTK_DATA_OBJECT
+		//case VTK_DATA_OBJECT:
+		break;
+	}
+
+	return CacheEquals(o1->GetFieldData(), o2->GetFieldData());
+}
+
 bool CacheUtils::CacheEquals(vtkAbstractArray* arr1, vtkAbstractArray* arr2)
 {
 	if (arr1->GetDataSize() != arr2->GetDataSize())
@@ -25,7 +138,7 @@ bool CacheUtils::CacheEquals(vtkAbstractArray* arr1, vtkAbstractArray* arr2)
 #endif
 }
 
-bool CacheUtils::CacheEquals(vtkDataSetAttributes* data1, vtkDataSetAttributes* data2)
+bool CacheUtils::CacheEquals(vtkFieldData* data1, vtkFieldData* data2)
 {
 	if (data1->GetNumberOfArrays() != data2->GetNumberOfArrays())
 		return false;
@@ -37,23 +150,31 @@ bool CacheUtils::CacheEquals(vtkDataSetAttributes* data1, vtkDataSetAttributes* 
 	return true;
 }
 
-bool CacheUtils::CacheEquals(vtkPolyData* data1, vtkPolyData* data2)
+bool CacheUtils::CacheEquals(vtkDataSet* data1, vtkDataSet* data2)
+{
+	return CacheEquals(data1->GetPointData(), data2->GetPointData()) &&
+		CacheEquals(data1->GetCellData(), data2->GetCellData());
+}
+
+bool CacheUtils::CacheEquals(vtkPointSet* data1, vtkPointSet* data2)
 {
 	return CacheEquals(data1->GetPoints()->GetData(), data2->GetPoints()->GetData()) &&
+		CacheEquals((vtkDataSet*)data1, (vtkDataSet*)data2);
+}
+
+bool CacheUtils::CacheEquals(vtkPolyData* data1, vtkPolyData* data2)
+{
+	return CacheEquals((vtkPointSet*)data1, (vtkPointSet*)data2) &&
 		CacheEquals(data1->GetVerts()->GetData(), data2->GetVerts()->GetData()) &&
 		CacheEquals(data1->GetPolys()->GetData(), data2->GetPolys()->GetData()) &&
 		CacheEquals(data1->GetLines()->GetData(), data2->GetLines()->GetData()) &&
-		CacheEquals(data1->GetStrips()->GetData(), data2->GetStrips()->GetData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetPointData(), (vtkDataSetAttributes*)data2->GetPointData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetCellData(), (vtkDataSetAttributes*)data2->GetCellData());
+		CacheEquals(data1->GetStrips()->GetData(), data2->GetStrips()->GetData());		
 }
 
 bool CacheUtils::CacheEquals(vtkUnstructuredGrid* data1, vtkUnstructuredGrid* data2)
 {
-	return CacheEquals(data1->GetPoints()->GetData(), data2->GetPoints()->GetData()) &&
-		CacheEquals(data1->GetCells()->GetData(), data2->GetCells()->GetData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetPointData(), (vtkDataSetAttributes*)data2->GetPointData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetCellData(), (vtkDataSetAttributes*)data2->GetCellData());
+	return CacheEquals((vtkPointSet*)data1, (vtkPointSet*)data2) &&
+		CacheEquals(data1->GetCells()->GetData(), data2->GetCells()->GetData());		
 }
 
 bool CacheUtils::CacheEquals(vtkRectilinearGrid* data1, vtkRectilinearGrid* data2)
@@ -71,8 +192,7 @@ bool CacheUtils::CacheEquals(vtkRectilinearGrid* data1, vtkRectilinearGrid* data
 		CacheEquals(data1->GetXCoordinates(), data2->GetXCoordinates()) &&
 		CacheEquals(data1->GetYCoordinates(), data2->GetYCoordinates()) &&
 		CacheEquals(data1->GetZCoordinates(), data2->GetZCoordinates()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetPointData(), (vtkDataSetAttributes*)data2->GetPointData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetCellData(), (vtkDataSetAttributes*)data2->GetCellData());
+		CacheEquals((vtkDataSet*)data1, (vtkDataSet*)data2);		
 }
 
 bool CacheUtils::CacheEquals(vtkStructuredGrid* data1, vtkStructuredGrid* data2)
@@ -86,9 +206,8 @@ bool CacheUtils::CacheEquals(vtkStructuredGrid* data1, vtkStructuredGrid* data2)
 	bool dimensionsFit = data1->GetDataDimension() == 2 ?
 		(dimensions1[0] == dimensions2[0] && dimensions1[1] == dimensions2[1]) :
 		(dimensions1[0] == dimensions2[0] && dimensions1[1] == dimensions2[1] && dimensions1[2] == dimensions2[2]);
-	return dimensionsFit && CacheEquals(data1->GetPoints()->GetData(), data2->GetPoints()->GetData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetPointData(), (vtkDataSetAttributes*)data2->GetPointData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetCellData(), (vtkDataSetAttributes*)data2->GetCellData());
+	return dimensionsFit &&
+		CacheEquals((vtkPointSet*)data1, (vtkPointSet*)data2);
 }
 
 bool CacheUtils::CacheEquals(vtkImageData* data1, vtkImageData* data2)
@@ -117,8 +236,7 @@ bool CacheUtils::CacheEquals(vtkImageData* data1, vtkImageData* data2)
 		(origin1[0] == origin2[0] && origin1[1] == origin2[1]) :
 		(origin1[0] == origin2[0] && origin1[1] == origin2[1] && origin1[2] == origin2[2]);
 	return dimensionsFit && spacingFits && originFits &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetPointData(), (vtkDataSetAttributes*)data2->GetPointData()) &&
-		CacheEquals((vtkDataSetAttributes*)data1->GetCellData(), (vtkDataSetAttributes*)data2->GetCellData());
+		CacheEquals((vtkDataSet*)data1, (vtkDataSet*)data2);
 }
 
 void CacheUtils::CacheInit(vtkDataObject* source, vtkDataObject* & dataToInit)

@@ -4,45 +4,33 @@ namespace CacheSystem
 {
 	namespace StandardFunctions
 	{
-		template <> bool standardEqualFunction(const int & val1, const int & val2, void*)
-		{
-			return val1 == val2;
-		}
-		
-		template <> bool standardEqualFunction(const unsigned int & val1, const unsigned int & val2, void*)
-		{
-			return val1 == val2;
+#define STD_EQUALFUNC_SPECIALIZE(type) \
+		template <> bool standardEqualFunction(const type& value1, const type& value2, void*) \
+		{ \
+			return value1 == value2;\
 		}
 
+		STD_EQUALFUNC_SPECIALIZE(bool);
+		STD_EQUALFUNC_SPECIALIZE(char);
+		STD_EQUALFUNC_SPECIALIZE(signed char);
+		STD_EQUALFUNC_SPECIALIZE(unsigned char);
+		STD_EQUALFUNC_SPECIALIZE(wchar_t);
 
-		template <> bool standardEqualFunction(const char & val1, const char & val2, void*)
-		{
-			return val1 == val2;
-		}
+		STD_EQUALFUNC_SPECIALIZE(short);
+		STD_EQUALFUNC_SPECIALIZE(unsigned short);
+		STD_EQUALFUNC_SPECIALIZE(int);
+		STD_EQUALFUNC_SPECIALIZE(unsigned int);
+		STD_EQUALFUNC_SPECIALIZE(long);
+		STD_EQUALFUNC_SPECIALIZE(unsigned long);
+		STD_EQUALFUNC_SPECIALIZE(unsigned long long);
 
-		template <> bool standardEqualFunction(const std::string & val1, const std::string & val2, void*)
-		{
-			return val1 == val2;
-		}
+		STD_EQUALFUNC_SPECIALIZE(float);
+		STD_EQUALFUNC_SPECIALIZE(double);
+		STD_EQUALFUNC_SPECIALIZE(long double);
 
-		template <> bool standardEqualFunction(const double & val1, const double & val2, void*)
-		{
-			double diff = val1 - val2;
-			diff = diff < 0 ? -diff : diff;
-			return diff < 0.001;
-		}
+		STD_EQUALFUNC_SPECIALIZE(std::string);
 
-		template <> bool standardEqualFunction(const float & val1, const float & val2, void*)
-		{
-			double diff = val1 - val2;
-			diff = diff < 0 ? -diff : diff;
-			return diff < 0.001;
-		}
-		
-		template <> bool standardEqualFunction(const bool & val1, const bool & val2, void*)
-		{
-			return val1 == val2;
-		}
+#undef STD_EQUALFUNC_SPECIALIZE		
 
 	}
 }

@@ -14,45 +14,37 @@ namespace CacheSystem
 		*/
 		template <class Type> bool standardEqualFunction(const Type & val1, const Type & val2, void*)
 		{
+			static_assert(false, "No standardEqualFunction available for this type");
+
 			std::string message = "No standardEqualFunction available for type ";
 			std::string type = std::string(typeid(Type).name());
 			throw std::exception((message + type).c_str());
 		}
 
-		/**
-		compares values using the == operator
-		*/
-		template <> bool standardEqualFunction(const int & val1, const int & val2, void*);
+#define STD_EQUALFUNC_SPECIALIZE(type) \
+		template <> bool standardEqualFunction(const type& value1, const type& value2, void*);
 
-		/**
-		compares values using the == operator
-		*/
-		template <> bool standardEqualFunction(const unsigned int & val1, const unsigned int & val2, void*);
+		STD_EQUALFUNC_SPECIALIZE(bool);
+		STD_EQUALFUNC_SPECIALIZE(char);
+		STD_EQUALFUNC_SPECIALIZE(signed char);
+		STD_EQUALFUNC_SPECIALIZE(unsigned char);
+		STD_EQUALFUNC_SPECIALIZE(wchar_t);
 
-		/**
-		compares values using the == operator
-		*/
-		template <> bool standardEqualFunction(const char & val1, const char & val2, void*);
+		STD_EQUALFUNC_SPECIALIZE(short);
+		STD_EQUALFUNC_SPECIALIZE(unsigned short);
+		STD_EQUALFUNC_SPECIALIZE(int);
+		STD_EQUALFUNC_SPECIALIZE(unsigned int);
+		STD_EQUALFUNC_SPECIALIZE(long);
+		STD_EQUALFUNC_SPECIALIZE(unsigned long);
+		STD_EQUALFUNC_SPECIALIZE(unsigned long long);
 
-		/**
-		compares values using the == operator
-		*/
-		template <> bool standardEqualFunction(const std::string & val1, const std::string & val2, void*);
+		STD_EQUALFUNC_SPECIALIZE(float);
+		STD_EQUALFUNC_SPECIALIZE(double);
+		STD_EQUALFUNC_SPECIALIZE(long double);
 
-		/**
-		returns true if the absolute value of val1 - val2 is less than 0.001
-		*/
-		template <> bool standardEqualFunction(const double & val1, const double & val2, void*);
+		STD_EQUALFUNC_SPECIALIZE(std::string);		
 
-		/**
-		returns true if the absolute value of val1 - val2 is less than 0.001
-		*/
-		template <> bool standardEqualFunction(const float & val1, const float & val2, void*);
-
-		/**
-		compares values using the == operator
-		*/
-		template <> bool standardEqualFunction(const bool & val1, const bool & val2, void*);
+#undef STD_EQUALFUNC_SPECIALIZE
 	}
 }
 

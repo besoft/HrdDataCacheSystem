@@ -89,11 +89,15 @@ protected:
 
 	/**
 	this method defines how the two input arguments should be compared
-	this method should be overridden by the user
+	usually there is no need to override this method	
 	*/
 	virtual bool inputEqualsFunction(vtkInformationVector** input1, vtkInformationVector** input2)
 	{
-		return true;
+		//each filter may have multiple input ports and 
+		//each port may have multiple input objects
+
+		int ports = this->GetNumberOfInputPorts();
+		return CacheUtils::CacheEquals(input1, input2, ports);
 	}
 
 	/**
