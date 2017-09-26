@@ -1,18 +1,17 @@
-#ifndef _STANDARD_DESTROY_FUNCTIONS_H
-#define _STANDARD_DESTROY_FUNCTIONS_H
+/**
+DO NOT PLACE: #pragma once or #ifndef here
+this file is worked out from StandardFunctions.h
+*/
 
-namespace CacheSystem
-{
-	namespace StandardFunctions
-	{
+#ifndef _STANDARD_FUNCTIONS_INCLUDE
+#include "StandardFunctions.h"
+#else
 		/**
 		calls the instance's destructor (if it's not a primitive type or pointer)
 		*/
-		template <class Type> void standardDestroyFunction(Type & instance, void* dependencyObject)
+		template <class Type> 
+		static void standardDestroyFunction(Type & instance, DependencyObj)
 		{
 			instance.~Type();
-		}
-	}
-}
-
+		}		
 #endif

@@ -27,6 +27,7 @@ SET(PROJECT_SRCS
 	ParameterType.h
 	ReturnInfo.h
 	ReturnType.h
+	StandardFunctions.h
 	StandardDestroyFunctions.h
 	StandardEqualFunctions.cpp
 	StandardEqualFunctions.h

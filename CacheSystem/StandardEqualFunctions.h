@@ -1,51 +1,32 @@
-#ifndef _STANDARD_EQUAL_FUNCTION_H
-#define _STANDARD_EQUAL_FUNCTION_H
+/** 
+	DO NOT PLACE: #pragma once or #ifndef here
+	this file is worked out from StandardFunctions.h 
+*/
 
-#include <string>
-#include <exception>
-
-namespace CacheSystem
+#ifndef _STANDARD_FUNCTIONS_INCLUDE
+#include "StandardFunctions.h"
+#else
+/**
+No generic standardEqualFunction available
+*/
+template <typename Type>
+static bool standardEqualFunction(const Type & val1, const Type & val2, DependencyObj)
 {
-	namespace StandardFunctions
-	{
-		/**
-		No generic standardEqualFunction available
-		only throws exception
-		*/
-		template <class Type> bool standardEqualFunction(const Type & val1, const Type & val2, void*)
-		{
-			static_assert(false, "No standardEqualFunction available for this type");
+	static_assert(false, "No standardEqualFunction available for this type");
 
-			std::string message = "No standardEqualFunction available for type ";
-			std::string type = std::string(typeid(Type).name());
-			throw std::exception((message + type).c_str());
+	//TODO: add specializations for types having operator ==
+	//with a very special solution for pointers: 
+	//pointers must equal or there must be operator == for (*val1 == *val2)
+	//with the check for null pointers
+}
+
+#define STD_FUNC_SPECIALIZE(Type) \
+		template <> static bool standardEqualFunction(const Type & value1, const Type & value2, DependencyObj) \
+		{ \
+			return value1 == value2;\
 		}
 
-#define STD_EQUALFUNC_SPECIALIZE(type) \
-		template <> bool standardEqualFunction(const type& value1, const type& value2, void*);
-
-		STD_EQUALFUNC_SPECIALIZE(bool);
-		STD_EQUALFUNC_SPECIALIZE(char);
-		STD_EQUALFUNC_SPECIALIZE(signed char);
-		STD_EQUALFUNC_SPECIALIZE(unsigned char);
-		STD_EQUALFUNC_SPECIALIZE(wchar_t);
-
-		STD_EQUALFUNC_SPECIALIZE(short);
-		STD_EQUALFUNC_SPECIALIZE(unsigned short);
-		STD_EQUALFUNC_SPECIALIZE(int);
-		STD_EQUALFUNC_SPECIALIZE(unsigned int);
-		STD_EQUALFUNC_SPECIALIZE(long);
-		STD_EQUALFUNC_SPECIALIZE(unsigned long);
-		STD_EQUALFUNC_SPECIALIZE(unsigned long long);
-
-		STD_EQUALFUNC_SPECIALIZE(float);
-		STD_EQUALFUNC_SPECIALIZE(double);
-		STD_EQUALFUNC_SPECIALIZE(long double);
-
-		STD_EQUALFUNC_SPECIALIZE(std::string);		
-
-#undef STD_EQUALFUNC_SPECIALIZE
-	}
-}
+STD_SPECIALIZE_STD_TYPES(STD_FUNC_SPECIALIZE)
+#undef STD_FUNC_SPECIALIZE
 
 #endif

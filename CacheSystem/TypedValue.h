@@ -9,8 +9,8 @@ namespace CacheSystem
 	represents a concrete cached value
 	Type is the type of the value
 	*/
-	template <class Type>
-	class TypedValue : public Value, DataManipulationFunctionsTypeTraits<Type>
+	template <class Type, class DepObj>
+	class TypedValueWithDepObj : public Value, DataManipulationFunctionsTypeTraits<Type, DepObj>
 	{
 	private:
 		/**
@@ -26,18 +26,18 @@ namespace CacheSystem
 		/**
 		pointer to the dependency object
 		*/
-		void* dependencyObject;
+		DepObj dependencyObject;
 
 	public:
 		/**
 		initializes the value using the specified initFunction (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		TypedValue(const Type & value, InitFunction initFunction, void* dependencyObject, DestroyFunction destroyFunction);
+		TypedValueWithDepObj(const Type & value, InitFunction initFunction, DepObj dependencyObject, DestroyFunction destroyFunction);
 
 		/**
 		correctly destroys the value using the destroyFunction
 		*/
-		~TypedValue();
+		~TypedValueWithDepObj();
 
 		/**
 		returns the value
@@ -45,15 +45,15 @@ namespace CacheSystem
 		const Type & getValue() { return *value; }
 	};
 
-	template <class Type>
-	TypedValue<Type>::TypedValue(const Type & value, InitFunction initFunction, void* dependencyObject, DestroyFunction destroyFunction)
+	template <class Type, class DepObj>
+	TypedValueWithDepObj<Type,DepObj>::TypedValueWithDepObj(const Type & value, InitFunction initFunction, DepObj dependencyObject, DestroyFunction destroyFunction)
 		: value((Type*)new char[sizeof(Type)]), destroyFunction(destroyFunction), dependencyObject(dependencyObject)
 	{
 		initFunction(value, this->value, dependencyObject);
 	}
 
-	template <class Type>
-	TypedValue<Type>::~TypedValue()
+	template <class Type, class DepObj>
+	TypedValueWithDepObj<Type, DepObj>::~TypedValueWithDepObj()
 	{
 		destroyFunction(*value, dependencyObject);
 		delete[] ((char*)value);

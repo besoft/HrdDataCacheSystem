@@ -4,16 +4,16 @@
 
 namespace CacheSystem
 {
-	template<class Type>
+	template<class Type, class DependencyObj>
 	struct DataManipulationFunctionsTypeTraits
 	{
-		using EqualFunctionSig = typename bool(const Type &, const Type &, void*);
-		using InitFunctionSig = typename void(const Type &, Type*, void*);
-		using OutputFunctionSig = typename void(const Type &, Type &, void*);
-		using DestroyFunctionSig = typename void(Type &, void*);
-		using ReturnFunctionSig = typename Type(const Type &, void*);
-		using GetSizeFunctionSig = typename size_t(const Type &, void*);
-		using HashFunctionSig = typename size_t(const Type &, void*);
+		using EqualFunctionSig = typename bool(const Type &, const Type &, DependencyObj);
+		using InitFunctionSig = typename void(const Type &, Type*, DependencyObj);
+		using OutputFunctionSig = typename void(const Type &, Type &, DependencyObj);
+		using DestroyFunctionSig = typename void(Type &, DependencyObj);
+		using ReturnFunctionSig = typename Type(const Type &, DependencyObj);
+		using GetSizeFunctionSig = typename size_t(const Type &, DependencyObj);
+		using HashFunctionSig = typename size_t(const Type &, DependencyObj);
 		
 		using EqualFunction = typename std::function<EqualFunctionSig>;
 		using InitFunction = typename std::function<InitFunctionSig>;

@@ -4,12 +4,7 @@
 #include <stdint.h>
 #include "ParameterInfo.h"
 #include "ParameterType.h"
-#include "StandardInitFunctions.h"
-#include "StandardEqualFunctions.h"
-#include "StandardDestroyFunctions.h"
-#include "StandardOutputFunctions.h"
-#include "StandardHashFunctions.h"
-#include "StandardGetSizeFunctions.h"
+#include "StandardFunctions.h"
 #include "Hash.h"
 #include "DataManipulationFunctionsTypeTraits.h"
 
@@ -20,8 +15,8 @@ namespace CacheSystem
 	Type is the type of the parameter
 	Use DependencyObj = void to have no dependency object
 	*/
-	template <class Type>
-	struct TypedParameterInfo : public ParameterInfo, DataManipulationFunctionsTypeTraits<Type>
+	template <class Type, class DependencyObj>
+	struct TypedParameterInfoWithDepObj : public ParameterInfo, DataManipulationFunctionsTypeTraits<Type, DependencyObj>
 	{
 		/**
 		pointer to a function that defines how the parameter will be compared to any cached value of this parameter
@@ -86,14 +81,14 @@ namespace CacheSystem
 		/**
 		creates the object and sets function pointers to standard values and parameter type to Input
 		*/		
-		TypedParameterInfo(ParameterType paramType = ParameterType::InputParam);
+		TypedParameterInfoWithDepObj(ParameterType paramType = ParameterType::InputParam);
 
 		/**
 		creates the object and sets the data manipulation functions and parameter type
 		N.B. data manipulation functions can be functions, functors, bound methods,
 		lambda expressions, etc. - see CachedFunctionManager::createCachedFunction
 		*/
-		TypedParameterInfo(
+		TypedParameterInfoWithDepObj(
 			ParameterType paramType,
 			EqualFunction equalFunction,
 			InitFunction initFunction,
@@ -109,8 +104,8 @@ namespace CacheSystem
 		std::shared_ptr<ParameterInfo> getCopy();
 	};
 
-	template <class Type>
-	TypedParameterInfo<Type>::TypedParameterInfo(ParameterType paramType) :
+	template <class Type, class DependencyObj >
+	TypedParameterInfoWithDepObj<Type, DependencyObj>::TypedParameterInfoWithDepObj(ParameterType paramType) :
 		ParameterInfo(paramType),
 		equalFunction(StandardFunctions::standardEqualFunction<Type>),
 		initFunction(StandardFunctions::standardInitFunction<Type>),
@@ -121,8 +116,8 @@ namespace CacheSystem
 	{
 	}
 
-	template <class Type>
-	TypedParameterInfo<Type>::TypedParameterInfo(
+	template <class Type, class DependencyObj >
+	TypedParameterInfoWithDepObj<Type, DependencyObj>::TypedParameterInfoWithDepObj(
 		ParameterType paramType,
 		EqualFunction equalFunction,
 		InitFunction initFunction,
@@ -141,13 +136,17 @@ namespace CacheSystem
 	{
 	}
 
-	template <class Type>
-	std::shared_ptr<ParameterInfo> TypedParameterInfo<Type>::getCopy()
+	template <class Type, class DependecyObj>
+	std::shared_ptr<ParameterInfo> TypedParameterInfoWithDepObj<Type, DependecyObj>::getCopy()
 	{
 		return std::shared_ptr<ParameterInfo> (
-			new TypedParameterInfo<Type>(paramType, equalFunction, initFunction, outputFunction, destroyFunction, hashFunction, getSizeFunction)
+			new TypedParameterInfoWithDepObj<Type, DependecyObj>(paramType, equalFunction, initFunction, outputFunction, destroyFunction, hashFunction, getSizeFunction)
 		);
 	}
+
+	/** TypedParameterInfo with void* dependency object - used for the backward compatibility*/
+	template<typename Type>
+	using TypedParameterInfo = typename TypedParameterInfoWithDepObj<Type, void*>;
 }
 
 #endif

@@ -19,15 +19,15 @@ namespace CacheSystem
 	/*
 	this method's code is long and ugly but it cannot be simply split into more smaller methods because it would create unnecessary copying of parameters and return value into and from lower levels during calling the methods
 	*/
-	template <class ReturnType, class... ParamTypes>
-	ReturnType CachedFunction<ReturnType, ParamTypes...>::call(ParamTypes... params)
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	ReturnType CachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::call(ParamTypes... params)
 	{
 		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
 		if (numberOfParameters == -1)
 			setNumberOfParameters(0, params...);
 		size_t hash = calculateHash(0, params...);
 		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);  //find data for given input
-		TypedReturnInfo<ReturnType>* returnInfo = (TypedReturnInfo<ReturnType>*)conf.getReturnInfo().get();
+		TypedReturnInfoWithDepObj<ReturnType, DependencyObj>* returnInfo = (TypedReturnInfoWithDepObj<ReturnType, DependencyObj>*)conf.getReturnInfo().get();
 		if (data == nullptr) //if there are no data for given input
 		{
 			data = std::shared_ptr<CacheData>(new CacheData(this));
@@ -65,18 +65,19 @@ namespace CacheSystem
 		//cout << "Collisions: " << cacheData.maxCollisions << endl;
 		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)  //if return value is not ignored
 		{			
-			auto retFunc = returnInfo->returnFunction.target<std::add_pointer<TypedReturnInfo<ReturnType>::ReturnFunctionSig>::type>();
-			if (retFunc && *retFunc == StandardFunctions::DirectReturn<ReturnType>)
-				return ((TypedValue<ReturnType>*)data->getReturnValue())->getValue();  //returns the value directly
-			return returnInfo->returnFunction(((TypedValue<ReturnType>*)data->getReturnValue())->getValue(), conf.getDependencyObject());  //returns the value using the return function
+			auto retFunc = returnInfo->returnFunction.target<
+				std::add_pointer<TypedReturnInfoWithDepObj<ReturnType, DependencyObj>::ReturnFunctionSig>::type>();
+			if (retFunc && *retFunc == StandardFunctionsWithDepObj<DependencyObj>::DirectReturn<ReturnType>)
+				return ((TypedValueWithDepObj<ReturnType, DependencyObj>*)data->getReturnValue())->getValue();  //returns the value directly
+			return returnInfo->returnFunction(((TypedValueWithDepObj<ReturnType, DependencyObj>*)data->getReturnValue())->getValue(), conf.getDependencyObject());  //returns the value using the return function
 		}
 	}
 
 	/*
 	this method's code is long and ugly but it cannot be simply split into more smaller methods because it would create unnecessary copying of parameters into lower levels during calling the methods
 	*/
-	template <class... ParamTypes>
-	void CachedFunction<void, ParamTypes...>::call(ParamTypes... params)
+	template <class DependencyObj, class... ParamTypes>
+	void CachedFunctionWithDepObj<DependencyObj, void, ParamTypes...>::call(ParamTypes... params)
 	{
 		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
 		if (numberOfParameters == -1)

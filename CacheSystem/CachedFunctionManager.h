@@ -159,8 +159,9 @@ namespace CacheSystem
 					);
 
 		*/
-		template <class ReturnType, class... ParamTypes>
-		CachedFunction<ReturnType, ParamTypes...>* createCachedFunction(const CacheConfiguration& conf, std::function<ReturnType(ParamTypes...)>& function);
+		template <class DepObj, class ReturnType, class... ParamTypes>
+		CachedFunctionWithDepObj<DepObj, ReturnType, ParamTypes...>* 
+			createCachedFunction(const CacheConfigurationWithDepObj<DepObj>& conf, std::function<ReturnType(ParamTypes...)>& function);
 
 		/**
 		creates, registers and returns a new cache object
@@ -169,8 +170,9 @@ namespace CacheSystem
 		Example: auto cf = createCachedFunction(conf, Fce);
 		N.B. for non-static methods, see the createCachedFunction taking std::function
 		*/
-		template <class ReturnType, class... ParamTypes>
-		CachedFunction<ReturnType, ParamTypes...>* createCachedFunction(const CacheConfiguration& conf, ReturnType(*function)(ParamTypes...))
+		template <class DepObj, class ReturnType, class... ParamTypes>
+		CachedFunctionWithDepObj<DepObj, ReturnType, ParamTypes...>* 
+			createCachedFunction(const CacheConfigurationWithDepObj<DepObj>& conf, ReturnType(*function)(ParamTypes...))
 		{
 			return createCachedFunction(conf, std::function<ReturnType(ParamTypes...)>(function));
 		}
@@ -182,18 +184,19 @@ namespace CacheSystem
 		N.B. lambda expressions are convenient way to support methods (including virtual one)
 		Example: auto cf = createCachedFunction(conf, [](int par1, void*) -> void { this->VirtMethod(par1); });
 		*/
-		template <class FunctorType>
-		auto createCachedFunction(const CacheConfiguration& conf, FunctorType& functor)
+		template <class DepObj, class FunctorType>
+		auto createCachedFunction(const CacheConfigurationWithDepObj<DepObj>& conf, FunctorType& functor)
 			-> decltype(createCachedFunction(conf, make_function_type<FunctorType>(functor)))
 		{
 			return createCachedFunction(conf, make_function_type<FunctorType>(functor));
 		}
 	};
 
-	template <class ReturnType, class... ParamTypes>
-	CachedFunction<ReturnType, ParamTypes...>* CachedFunctionManager::createCachedFunction(const CacheConfiguration& conf, std::function<ReturnType(ParamTypes...)>& function)
+	template <class DepObj, class ReturnType, class... ParamTypes>
+	CachedFunctionWithDepObj<DepObj, ReturnType, ParamTypes...>* 
+		CachedFunctionManager::createCachedFunction(const CacheConfigurationWithDepObj<DepObj>& conf, std::function<ReturnType(ParamTypes...)>& function)
 	{
-		CachedFunction<ReturnType, ParamTypes...>* cachedFunction = new CachedFunction<ReturnType, ParamTypes...>(conf, function, this);
+		CachedFunctionWithDepObj<DepObj, ReturnType, ParamTypes...>* cachedFunction = new CachedFunctionWithDepObj<DepObj, ReturnType, ParamTypes...>(conf, function, this);
 		cachedFunctions.push_back(cachedFunction);
 		return cachedFunction;
 	}

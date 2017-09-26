@@ -9,8 +9,8 @@ namespace CacheSystem
 	manages the caching and contains all the cached data
 	this class is for functions with a return value
 	*/
-	template <class ReturnType, class... ParamTypes>
-	class CachedFunction : public AbstractCachedFunction<ReturnType, ParamTypes...>
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	class CachedFunctionWithDepObj : public AbstractCachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>
 	{
 		friend class CachedFunctionManager;
 	private:
@@ -19,8 +19,8 @@ namespace CacheSystem
 		first parameter is the cache configuration object
 		second parameter is the function for data generating
 		*/		
-		CachedFunction(const CacheConfiguration & conf, std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
-			: AbstractCachedFunction(conf, function, manager) {}
+		CachedFunctionWithDepObj(const CacheConfigurationWithDepObj<DependencyObj> & conf, std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
+			: AbstractCachedFunctionWithDepObj(conf, function, manager) {}
 
 	public:
 		ReturnType call(ParamTypes... params);
@@ -30,8 +30,8 @@ namespace CacheSystem
 	manages the caching and contains all the cached data
 	this specialization is for functions without a return value (void)
 	*/
-	template <class... ParamTypes>
-	class CachedFunction<void, ParamTypes...> : public AbstractCachedFunction<void, ParamTypes...>
+	template <class DependencyObj, class... ParamTypes>
+	class CachedFunctionWithDepObj<DependencyObj, void, ParamTypes...> : public AbstractCachedFunctionWithDepObj<DependencyObj, void, ParamTypes...>
 	{
 		friend class CachedFunctionManager;
 	private:
@@ -39,14 +39,20 @@ namespace CacheSystem
 		initializing constructor
 		first parameter is the cache configuration object
 		second parameter is the function for data generating
-		*/
-		CachedFunction(const CacheConfiguration & conf, 
+		*/		
+		CachedFunctionWithDepObj(const CacheConfigurationWithDepObj<DependencyObj> & conf, 
 			std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
-			: AbstractCachedFunction(conf, function, manager) {}
+			: AbstractCachedFunctionWithDepObj(conf, function, manager) {}
 
 	public:
 		void call(ParamTypes... params);
 	};
+
+	/**
+	alias that manages the caching and contains all the cached data using void* dependency object	
+	*/
+	template <class ReturnType, class... ParamTypes>
+	using CachedFunction = typename CachedFunctionWithDepObj<void*, ReturnType, ParamTypes...>;	
 }
 
 #endif

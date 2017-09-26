@@ -15,14 +15,14 @@ namespace CacheSystem
 	manages the caching and contains all the cached data
 	this is an abstract parent for both functions with a return value and functions without a return value (void)
 	*/
-	template <class ReturnType, class... ParamTypes>
-	class AbstractCachedFunction : public CachedFunctionParent
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	class AbstractCachedFunctionWithDepObj : public CachedFunctionParent
 	{
 	protected:
 		/**
 		contains configuration for the caching
 		*/
-		CacheConfiguration conf;
+		CacheConfigurationWithDepObj<DependencyObj> conf;
 
 		/**
 		number of parameters of the function
@@ -37,7 +37,7 @@ namespace CacheSystem
 		/**
 		contains all cached data
 		*/
-		CacheDataStructure cacheData;
+		CacheDataStructureWithDepObj<DependencyObj> cacheData;
 
 		/**
 		ticks per millisecond
@@ -92,7 +92,7 @@ namespace CacheSystem
 		/**
 		creates the object, the conf object is copied
 		*/
-		AbstractCachedFunction(const CacheConfiguration & conf, 
+		AbstractCachedFunctionWithDepObj(const CacheConfigurationWithDepObj<DependencyObj> & conf,
 			std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager);
 
 	public:
@@ -130,9 +130,10 @@ namespace CacheSystem
 	/**
 	creates the object, the conf object is copied
 	*/
-	template <class ReturnType, class... ParamTypes>
-	AbstractCachedFunction<ReturnType, ParamTypes...>::AbstractCachedFunction(
-		const CacheConfiguration & conf, std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	AbstractCachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::AbstractCachedFunctionWithDepObj(
+		const CacheConfigurationWithDepObj<DependencyObj> & conf,
+		std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
 		: CachedFunctionParent(manager), conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr)
 	{
 		QueryPerformanceFrequency((LARGE_INTEGER*)&cpuTicksPerMs);
@@ -142,21 +143,22 @@ namespace CacheSystem
 	/**
 	recursively iterates through all parameters passed as otherParams and calculates the hash value of all input parameters
 	*/
-	template <class ReturnType, class... ParamTypes>
-	template <class FirstType, class... OtherTypes> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex,
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	template <class FirstType, class... OtherTypes> size_t AbstractCachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::calculateHash(int paramIndex,
 		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{
-		return hash_combine_hvs(calculateHash(paramIndex, firstParam),
-			calculateHash(paramIndex + 1, otherParams...));
+		size_t seed = calculateHash(paramIndex, firstParam);
+		hash_combine(seed, calculateHash(paramIndex + 1, otherParams...));
+		return seed;
 	}
 
 	/**
 	stops the recursion of calculateHash
 	*/
-	template <class ReturnType, class... ParamTypes>
-	template <class Type> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex, const Type & param)
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	template <class Type> size_t AbstractCachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::calculateHash(int paramIndex, const Type & param)
 	{		
-		TypedParameterInfo<Type>* paramInfo = (TypedParameterInfo<Type>*)conf.getParamsInfo()[paramIndex].get();
+		TypedParameterInfoWithDepObj<Type, DependencyObj>* paramInfo = (TypedParameterInfoWithDepObj<Type, DependencyObj>*)conf.getParamsInfo()[paramIndex].get();
 		if (paramInfo->paramType == ParameterType::InputParam)
 			return paramInfo->hashFunction(param, conf.getDependencyObject());
 		return 0;		
@@ -165,8 +167,8 @@ namespace CacheSystem
 	/**
 	recursively iterates through all parameters passed as otherParams and calculates the sum of their sizes
 	*/
-	template <class ReturnType, class... ParamTypes>
-	template <class FirstType, class... OtherTypes> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateSize(int paramIndex,
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	template <class FirstType, class... OtherTypes> size_t AbstractCachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::calculateSize(int paramIndex,
 		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{		
 		return calculateSize(paramIndex, firstParam) + calculateSize(paramIndex + 1, otherParams...);
@@ -175,10 +177,10 @@ namespace CacheSystem
 	/**
 	stops the recursion of calculateSize
 	*/
-	template <class ReturnType, class... ParamTypes>
-	template <class Type> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateSize(int paramIndex, const Type & param)
+	template <class DependencyObj, class ReturnType, class... ParamTypes>
+	template <class Type> size_t AbstractCachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::calculateSize(int paramIndex, const Type & param)
 	{		
-		TypedParameterInfo<Type>* paramInfo = (TypedParameterInfo<Type>*)conf.getParamsInfo()[paramIndex].get();
+		TypedParameterInfoWithDepObj<Type, DependencyObj>* paramInfo = (TypedParameterInfoWithDepObj<Type, DependencyObj>*)conf.getParamsInfo()[paramIndex].get();
 		if (paramInfo->paramType != ParameterType::IgnoredParam)
 			return paramInfo->getSizeFunction(param, conf.getDependencyObject());
 		return 0;

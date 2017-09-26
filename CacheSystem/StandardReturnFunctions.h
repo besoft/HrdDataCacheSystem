@@ -1,20 +1,17 @@
-#ifndef _STANDARD_RETURN_FUNCTIONS_H
-#define _STANDARD_RETURN_FUNCTIONS_H
-#include <exception>
+/**
+DO NOT PLACE: #pragma once or #ifndef here
+this file is worked out from StandardFunctions.h
+*/
 
-namespace CacheSystem
+#ifndef _STANDARD_FUNCTIONS_INCLUDE
+#include "StandardFunctions.h"
+#else
+/**
+this function is never called and serves inly as a constant for comparing
+if this is set as the return function for the cache object the return value is returned directly from the cache
+*/
+template <class Type> static Type DirectReturn(const Type & value, DependencyObj)
 {
-	namespace StandardFunctions
-	{
-		/**
-		this function is never called and serves inly as a constant for comparing
-		if this is set as the return function for the cache object the return value is returned directly from the cache
-		*/
-		template <class Type> Type DirectReturn(const Type & value, void*)
-		{
-			throw std::exception("Function DirectReturn cannot be called, it serves only as a constant for comparing.");
-		}
-	}
+	throw std::exception("Function DirectReturn cannot be called, it serves only as a constant for comparing.");
 }
-
 #endif

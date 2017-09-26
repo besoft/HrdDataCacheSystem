@@ -1,48 +1,27 @@
-#ifndef _STANDARD_INIT_FUNCTIONS_H
-#define _STANDARD_INIT_FUNCTIONS_H
+/**
+DO NOT PLACE: #pragma once or #ifndef here
+this file is worked out from StandardFunctions.h
+*/
 
-namespace CacheSystem
+#ifndef _STANDARD_FUNCTIONS_INCLUDE
+#include "StandardFunctions.h"
+#else
+/**
+uses placement new operator to call the copy constructor on the uninitialized memory block
+*/
+template <typename Type>
+static void standardInitFunction(const Type & source, Type* destination, DependencyObj)
 {
-	namespace StandardFunctions
-	{
-		/**
-		uses placement new operator to call the copy constructor on the uninitialized memory block
-		*/
-		template <class Type> void standardInitFunction(const Type & source, Type* destination, void*)
-		{
-			new(destination)Type(source);
+	new(destination)Type(source);
+}
+		
+#define STD_INITFUNC_SPECIALIZE(type) \
+		template <> static void standardInitFunction(const type & source, type* destination, DependencyObj)\
+		{ \
+			*destination = source;\
 		}
 
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardInitFunction(const int &, int*, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardInitFunction(const unsigned int &, unsigned int*, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardInitFunction(const bool &, bool*, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardInitFunction(const double &, double*, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardInitFunction(const float &, float*, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardInitFunction(const char &, char*, void*);
-	}
-}
+		STD_SPECIALIZE_STD_TYPES(STD_INITFUNC_SPECIALIZE)
+#undef STD_INITFUNC_SPECIALIZE
 
 #endif
