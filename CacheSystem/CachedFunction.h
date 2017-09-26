@@ -61,14 +61,14 @@ namespace CacheSystem
 			*dataInCacheIndicator = true;  //the data is stored
 		manager->getCachePolicy()->hitData(data.get());
 		manager->performCacheMissEvents();
-		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output praramters of this method
+		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output parameters of this method
 		//cout << "Collisions: " << cacheData.maxCollisions << endl;
 		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)  //if return value is not ignored
-		{
-			ReturnType(*returnFunction)(const ReturnType &, void*) = returnInfo->returnFunction;
-			if (returnFunction == StandardFunctions::DirectReturn<ReturnType>)
+		{			
+			auto retFunc = returnInfo->returnFunction.target<std::add_pointer<TypedReturnInfo<ReturnType>::ReturnFunctionSig>::type>();
+			if (retFunc && *retFunc == StandardFunctions::DirectReturn<ReturnType>)
 				return ((TypedValue<ReturnType>*)data->getReturnValue())->getValue();  //returns the value directly
-			return returnFunction(((TypedValue<ReturnType>*)data->getReturnValue())->getValue(), conf.getDependencyObject());  //returns the value using the return function
+			return returnInfo->returnFunction(((TypedValue<ReturnType>*)data->getReturnValue())->getValue(), conf.getDependencyObject());  //returns the value using the return function
 		}
 	}
 

@@ -1,6 +1,7 @@
 #ifndef _TYPED_VALUE_H
 #define _TYPED_VALUE_H
 #include "Value.h"
+#include "DataManipulationFunctionsTypeTraits.h"
 
 namespace CacheSystem
 {
@@ -9,7 +10,7 @@ namespace CacheSystem
 	Type is the type of the value
 	*/
 	template <class Type>
-	class TypedValue : public Value
+	class TypedValue : public Value, DataManipulationFunctionsTypeTraits<Type>
 	{
 	private:
 		/**
@@ -20,7 +21,7 @@ namespace CacheSystem
 		/**
 		pointer to a function which defines how to destroy the value (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		void(*destroyFunction)(Type &, void*);
+		DestroyFunction destroyFunction;
 
 		/**
 		pointer to the dependency object
@@ -31,7 +32,7 @@ namespace CacheSystem
 		/**
 		initializes the value using the specified initFunction (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*), void* dependencyObject, void(*destroyFunction)(Type &, void*));
+		TypedValue(const Type & value, InitFunction initFunction, void* dependencyObject, DestroyFunction destroyFunction);
 
 		/**
 		correctly destroys the value using the destroyFunction
@@ -45,8 +46,7 @@ namespace CacheSystem
 	};
 
 	template <class Type>
-	TypedValue<Type>::TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*),
-		void* dependencyObject, void(*destroyFunction)(Type &, void*))
+	TypedValue<Type>::TypedValue(const Type & value, InitFunction initFunction, void* dependencyObject, DestroyFunction destroyFunction)
 		: value((Type*)new char[sizeof(Type)]), destroyFunction(destroyFunction), dependencyObject(dependencyObject)
 	{
 		initFunction(value, this->value, dependencyObject);

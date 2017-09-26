@@ -17,6 +17,7 @@ SET(PROJECT_SRCS
 	CacheManagerConfiguration.h
 	CachePolicy.cpp
 	CachePolicy.h
+	DataManipulationTypeTraits.h
 	DefaultCachePolicy.cpp
 	DefaultCachePolicy.h
 	Hash.h

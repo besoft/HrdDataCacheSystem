@@ -18,8 +18,8 @@ namespace CacheSystem
 		initializing constructor
 		first parameter is the cache configuration object
 		second parameter is the function for data generating
-		*/
-		CachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...), CachedFunctionManager* manager)
+		*/		
+		CachedFunction(const CacheConfiguration & conf, std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
 			: AbstractCachedFunction(conf, function, manager) {}
 
 	public:
@@ -40,7 +40,8 @@ namespace CacheSystem
 		first parameter is the cache configuration object
 		second parameter is the function for data generating
 		*/
-		CachedFunction(const CacheConfiguration & conf, void(*function)(ParamTypes...), CachedFunctionManager* manager)
+		CachedFunction(const CacheConfiguration & conf, 
+			std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
 			: AbstractCachedFunction(conf, function, manager) {}
 
 	public:

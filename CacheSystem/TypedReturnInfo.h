@@ -8,15 +8,16 @@
 #include "StandardDestroyFunctions.h"
 #include "StandardGetSizeFunctions.h"
 #include "ReturnType.h"
+#include "DataManipulationFunctionsTypeTraits.h"
 
 namespace CacheSystem
 {
 	/**
-	contains all iformation about the return value needed by the cache system
+	contains all information about the return value needed by the cache system
 	Type is the type of the return value
 	*/
 	template <class Type>
-	struct TypedReturnInfo : public ReturnInfo
+	struct TypedReturnInfo : public ReturnInfo, DataManipulationFunctionsTypeTraits<Type>
 	{
 		/**
 		pointer to a function that defines how to use the returned value to initialize the cached value of the return value
@@ -28,7 +29,7 @@ namespace CacheSystem
 		for objects the body should look like this ('ptr' is the pointer to the memory to initialize, 'value' is the value to use for the initialization):
 		new(ptr)Type(value); //uses copy constructor but can use any constructor and then copy the attributes
 		*/
-		void(*initFunction)(const Type &, Type*, void*);
+		InitFunction initFunction;
 
 		/**
 		pointer to a function that defines how the cahced value of the return value will be destroyed
@@ -49,7 +50,7 @@ namespace CacheSystem
 		but do not do this:
 		delete &value; //the memory is delocated automatically
 		*/
-		void(*destroyFunction)(Type &, void*);
+		DestroyFunction destroyFunction;
 
 		/**
 		pointer to a function that defines how the cached return value will be returned by the cache system
@@ -58,12 +59,12 @@ namespace CacheSystem
 		
 		if set to a CacheSystem::StandardFunctions::DirectReturn<Type> then the value will be returned directly
 		*/
-		Type(*returnFunction)(const Type &, void*);
+		ReturnFunction returnFunction;
 
 		/**
 		pointer to a function that defines how a size of the parameter is calculated
 		*/
-		uint64_t(*getSizeFunction)(const Type &, void*);
+		GetSizeFunction getSizeFunction;
 
 		/**
 		creates the object and sets function pointers to standard values and return type to Used
@@ -72,13 +73,15 @@ namespace CacheSystem
 
 		/**
 		creates the object and sets the function pointers and return type
+		N.B. data manipulation functions can be functions, functors, bound methods,
+		lambda expressions, etc. - see CachedFunctionManager::createCachedFunction
 		*/
 		TypedReturnInfo(
 			ReturnType returnType,
-			void(*initFunction)(const Type &, Type*, void*),
-			void(*destroyFunction)(Type &, void*),
-			Type(*returnFunction)(const Type &, void*),
-			uint64_t(*getSizeFunction)(const Type &, void*)
+			InitFunction initFunction,
+			DestroyFunction destroyFunction,
+			ReturnFunction returnFunction,
+			GetSizeFunction getSizeFunction
 			);
 
 		/**
@@ -90,10 +93,10 @@ namespace CacheSystem
 	template <class Type>
 	TypedReturnInfo<Type>::TypedReturnInfo(
 		ReturnType returnType,
-		void(*initFunction)(const Type &, Type*, void*),
-		void(*destroyFunction)(Type &, void*),
-		Type(*returnFunction)(const Type &, void*),
-		uint64_t(*getSizeFunction)(const Type &, void*)
+		InitFunction initFunction,
+		DestroyFunction destroyFunction,
+		ReturnFunction returnFunction,
+		GetSizeFunction getSizeFunction
 		) :
 		ReturnInfo(returnType),
 		initFunction(initFunction),

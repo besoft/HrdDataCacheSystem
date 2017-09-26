@@ -109,8 +109,8 @@ namespace CacheSystem
 		/**
 		adds a new value into the inputParameters vector
 		*/
-		template <class Type> void addInputParam(const Type & value, void(*initFunction)(const Type &, Type*, void*),
-			void* dependencyObject, void(*destroyFunction)(Type &, void*))
+		template <class Type> void addInputParam(const Type & value, typename TypedReturnInfo<Type>::InitFunction& initFunction,
+			void* dependencyObject, typename TypedReturnInfo<Type>::DestroyFunction& destroyFunction)
 		{
 			inputParameters.push_back(new TypedValue<Type>(value, initFunction, dependencyObject, destroyFunction));
 		}
@@ -118,8 +118,8 @@ namespace CacheSystem
 		/**
 		adds a new value into the outputParameters vecor
 		*/
-		template <class Type> void addOutputParam(const Type & value, void(*initFunction)(const Type &, Type*, void*),
-			void* dependencyObject, void(*destroyFunction)(Type &, void*))
+		template <class Type> void addOutputParam(const Type & value, typename TypedReturnInfo<Type>::InitFunction& initFunction,
+			void* dependencyObject, typename TypedReturnInfo<Type>::DestroyFunction& destroyFunction)
 		{
 			outputParameters.push_back(new TypedValue<Type>(value, initFunction, dependencyObject, destroyFunction));
 		}
@@ -127,8 +127,8 @@ namespace CacheSystem
 		/**
 		sets the return value
 		*/
-		template <class Type> void setReturnValue(const Type & value, void(*initFunction)(const Type &, Type*, void*),
-			void* dependencyObject, void(*destroyFunction)(Type &, void*))
+		template <class Type> void setReturnValue(const Type & value, typename TypedReturnInfo<Type>::InitFunction& initFunction,
+			void* dependencyObject, typename TypedReturnInfo<Type>::DestroyFunction& destroyFunction)
 		{
 			returnValue = new TypedValue<Type>(value, initFunction, dependencyObject, destroyFunction);
 		}

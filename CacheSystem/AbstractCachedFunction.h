@@ -30,7 +30,7 @@ namespace CacheSystem
 		int numberOfParameters;
 
 		/**
-		after the call method is called the value on the given adress is set to true if the data on the output are stored in cache, otherwise it is set to false
+		after the call method is called the value on the given address is set to true if the data on the output are stored in cache, otherwise it is set to false
 		*/
 		bool* dataInCacheIndicator;
 
@@ -48,7 +48,7 @@ namespace CacheSystem
 		function which is called to create the data to cache
 		the CachedFunction object simply simulates calling this function
 		*/
-		ReturnType(*function)(ParamTypes...);
+		std::function<ReturnType(ParamTypes...)> function;
 
 		/**
 		recursively iterates through all parameters passed as otherParams and counts them, the result is stored into the numberOfParameters
@@ -92,7 +92,8 @@ namespace CacheSystem
 		/**
 		creates the object, the conf object is copied
 		*/
-		AbstractCachedFunction(const CacheConfiguration & conf, ReturnType(*function)(ParamTypes...), CachedFunctionManager* manager);
+		AbstractCachedFunction(const CacheConfiguration & conf, 
+			std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager);
 
 	public:
 		/**
@@ -130,8 +131,8 @@ namespace CacheSystem
 	creates the object, the conf object is copied
 	*/
 	template <class ReturnType, class... ParamTypes>
-	AbstractCachedFunction<ReturnType, ParamTypes...>::AbstractCachedFunction(const CacheConfiguration & conf,
-		ReturnType(*function)(ParamTypes...), CachedFunctionManager* manager)
+	AbstractCachedFunction<ReturnType, ParamTypes...>::AbstractCachedFunction(
+		const CacheConfiguration & conf, std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
 		: CachedFunctionParent(manager), conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr)
 	{
 		QueryPerformanceFrequency((LARGE_INTEGER*)&cpuTicksPerMs);
@@ -142,7 +143,7 @@ namespace CacheSystem
 	recursively iterates through all parameters passed as otherParams and calculates the hash value of all input parameters
 	*/
 	template <class ReturnType, class... ParamTypes>
-	template <class FirstType, class... OtherTypes> uint64_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex,
+	template <class FirstType, class... OtherTypes> size_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex,
 		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{
 		return hash_combine_hvs(calculateHash(paramIndex, firstParam),
