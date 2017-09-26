@@ -145,8 +145,9 @@ namespace CacheSystem
 	template <class FirstType, class... OtherTypes> uint64_t AbstractCachedFunction<ReturnType, ParamTypes...>::calculateHash(int paramIndex,
 		const FirstType & firstParam, const OtherTypes &... otherParams)
 	{
-		return hash_combine_hvs(calculateHash(paramIndex, firstParam),
-			calculateHash(paramIndex + 1, otherParams...));
+		size_t seed = calculateHash(paramIndex, firstParam);
+		hash_combine(seed, calculateHash(paramIndex + 1, otherParams...));
+		return seed;
 	}
 
 	/**
