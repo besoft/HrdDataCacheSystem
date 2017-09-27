@@ -3,20 +3,18 @@
 
 #include <stdint.h>
 #include "ReturnInfo.h"
-#include "StandardReturnFunctions.h"
-#include "StandardInitFunctions.h"
-#include "StandardDestroyFunctions.h"
-#include "StandardGetSizeFunctions.h"
 #include "ReturnType.h"
+#include "DataManipulationFunctionsTypeTraits.h"
+#include "StandardFunctions.h"
 
 namespace CacheSystem
 {
 	/**
-	contains all iformation about the return value needed by the cache system
+	contains all information about the return value needed by the cache system
 	Type is the type of the return value
 	*/
-	template <class Type>
-	struct TypedReturnInfo : public ReturnInfo
+	template <class Type, class DependencyObj>
+	struct TypedReturnInfoWithDepObj : public ReturnInfo, DataManipulationFunctionsTypeTraits<Type, DependencyObj>
 	{
 		/**
 		pointer to a function that defines how to use the returned value to initialize the cached value of the return value
@@ -28,7 +26,7 @@ namespace CacheSystem
 		for objects the body should look like this ('ptr' is the pointer to the memory to initialize, 'value' is the value to use for the initialization):
 		new(ptr)Type(value); //uses copy constructor but can use any constructor and then copy the attributes
 		*/
-		void(*initFunction)(const Type &, Type*, void*);
+		InitFunction initFunction;
 
 		/**
 		pointer to a function that defines how the cahced value of the return value will be destroyed
@@ -49,7 +47,7 @@ namespace CacheSystem
 		but do not do this:
 		delete &value; //the memory is delocated automatically
 		*/
-		void(*destroyFunction)(Type &, void*);
+		DestroyFunction destroyFunction;
 
 		/**
 		pointer to a function that defines how the cached return value will be returned by the cache system
@@ -58,27 +56,29 @@ namespace CacheSystem
 		
 		if set to a CacheSystem::StandardFunctions::DirectReturn<Type> then the value will be returned directly
 		*/
-		Type(*returnFunction)(const Type &, void*);
+		ReturnFunction returnFunction;
 
 		/**
 		pointer to a function that defines how a size of the parameter is calculated
 		*/
-		uint64_t(*getSizeFunction)(const Type &, void*);
+		GetSizeFunction getSizeFunction;
 
 		/**
 		creates the object and sets function pointers to standard values and return type to Used
 		*/
-		TypedReturnInfo();
+		TypedReturnInfoWithDepObj();
 
 		/**
 		creates the object and sets the function pointers and return type
+		N.B. data manipulation functions can be functions, functors, bound methods,
+		lambda expressions, etc. - see CachedFunctionManager::createCachedFunction
 		*/
-		TypedReturnInfo(
+		TypedReturnInfoWithDepObj(
 			ReturnType returnType,
-			void(*initFunction)(const Type &, Type*, void*),
-			void(*destroyFunction)(Type &, void*),
-			Type(*returnFunction)(const Type &, void*),
-			uint64_t(*getSizeFunction)(const Type &, void*)
+			InitFunction initFunction,
+			DestroyFunction destroyFunction,
+			ReturnFunction returnFunction,
+			GetSizeFunction getSizeFunction
 			);
 
 		/**
@@ -87,13 +87,13 @@ namespace CacheSystem
 		std::shared_ptr<ReturnInfo> getCopy();
 	};
 
-	template <class Type>
-	TypedReturnInfo<Type>::TypedReturnInfo(
+	template <class Type, class DependencyObj>
+	TypedReturnInfoWithDepObj<Type, DependencyObj>::TypedReturnInfoWithDepObj(
 		ReturnType returnType,
-		void(*initFunction)(const Type &, Type*, void*),
-		void(*destroyFunction)(Type &, void*),
-		Type(*returnFunction)(const Type &, void*),
-		uint64_t(*getSizeFunction)(const Type &, void*)
+		InitFunction initFunction,
+		DestroyFunction destroyFunction,
+		ReturnFunction returnFunction,
+		GetSizeFunction getSizeFunction
 		) :
 		ReturnInfo(returnType),
 		initFunction(initFunction),
@@ -103,23 +103,31 @@ namespace CacheSystem
 	{
 	}
 
-	template <class Type>
-	TypedReturnInfo<Type>::TypedReturnInfo() :
+	template <class Type, class DependencyObj>
+	TypedReturnInfoWithDepObj<Type, DependencyObj>::TypedReturnInfoWithDepObj() :
 		ReturnInfo(ReturnType::UsedReturn),
-		initFunction(StandardFunctions::standardInitFunction<Type>),
-		destroyFunction(StandardFunctions::standardDestroyFunction<Type>),
-		returnFunction(StandardFunctions::DirectReturn<Type>),
-		getSizeFunction(StandardFunctions::standardGetSizeFunction<Type>)
+		initFunction(StandardFunctionsWithDepObj<DependencyObj>::standardInitFunction<Type>),
+		destroyFunction(StandardFunctionsWithDepObj<DependencyObj>::standardDestroyFunction<Type>),
+		returnFunction(StandardFunctionsWithDepObj<DependencyObj>::DirectReturn<Type>),
+		getSizeFunction(StandardFunctionsWithDepObj<DependencyObj>::standardGetSizeFunction<Type>)
 	{
 	}
 
-	template <class Type>
-	std::shared_ptr<ReturnInfo> TypedReturnInfo<Type>::getCopy()
+	template <class Type, class DependencyObj>
+	std::shared_ptr<ReturnInfo> TypedReturnInfoWithDepObj<Type, DependencyObj>::getCopy()
 	{
 		return std::shared_ptr<ReturnInfo>(
-			new TypedReturnInfo<Type>(returnType, initFunction, destroyFunction, returnFunction, getSizeFunction)
+			new TypedReturnInfoWithDepObj<Type, DependencyObj>(returnType, initFunction, destroyFunction, returnFunction, getSizeFunction)
 		);
-	}
+	}	
+
+	/** TypedParameterInfo with void* dependency object - used for the backward compatibility*/
+	template<typename Type>
+	using TypedReturnInfo = typename TypedReturnInfoWithDepObj<Type, void*>;
+	
+	/** alias for data manipulation functions with no dependency object */
+	template<typename Type>
+	using TypedReturnInfoNoDepObj = typename TypedReturnInfoWithDepObj<Type, NoDepObj>;
 }
 
 #endif

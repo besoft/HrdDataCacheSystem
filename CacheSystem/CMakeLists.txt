@@ -17,6 +17,7 @@ SET(PROJECT_SRCS
 	CacheManagerConfiguration.h
 	CachePolicy.cpp
 	CachePolicy.h
+	DataManipulationTypeTraits.h
 	DefaultCachePolicy.cpp
 	DefaultCachePolicy.h
 	Hash.h
@@ -26,6 +27,7 @@ SET(PROJECT_SRCS
 	ParameterType.h
 	ReturnInfo.h
 	ReturnType.h
+	StandardFunctions.h
 	StandardDestroyFunctions.h
 	StandardEqualFunctions.cpp
 	StandardEqualFunctions.h

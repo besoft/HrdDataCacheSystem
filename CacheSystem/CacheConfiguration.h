@@ -11,7 +11,8 @@ namespace CacheSystem
 	/**
 	contains configuration for a cached function
 	*/
-	class CacheConfiguration
+	template<typename DependencyObj>
+	class CacheConfigurationWithDepObj
 	{
 	private:
 		/**
@@ -27,7 +28,7 @@ namespace CacheSystem
 		/**
 		the dependency object that is passed to every function manipulating the cached data
 		*/
-		void* dependencyObject;
+		DependencyObj dependencyObject{};
 
 		/**
 		any data that are created in shorter time will not be cached
@@ -43,25 +44,25 @@ namespace CacheSystem
 		/**
 		sets information about a single parameter with a given index
 		*/
-		template <class Type> void setParamInfo(unsigned int paramIndex, TypedParameterInfo<Type> paramInfo);
+		template <class Type> void setParamInfo(unsigned int paramIndex, const TypedParameterInfoWithDepObj<Type, DependencyObj>& paramInfo);
 
 		/**
 		sets information about the return value
 		*/
-		template <class Type> void setReturnInfo(TypedReturnInfo<Type> returnInfo)
+		template <class Type> void setReturnInfo(const TypedReturnInfoWithDepObj<Type, DependencyObj>& returnInfo)
 		{
-			this->returnInfo = std::shared_ptr<ReturnInfo>(new TypedReturnInfo<Type>(returnInfo));
+			this->returnInfo = std::shared_ptr<ReturnInfo>(new TypedReturnInfoWithDepObj<Type, DependencyObj>(returnInfo));
 		}
 
 		/**
 		creates a clear configuration with no information set
 		*/
-		CacheConfiguration() : returnInfo(nullptr), dependencyObject(nullptr), minimumDataCreationTime(0), maximumDataSize(UINT64_MAX) {}
+		CacheConfigurationWithDepObj() : returnInfo(nullptr), minimumDataCreationTime(0), maximumDataSize(UINT64_MAX) {}
 
 		/**
 		correctly creates a copy of a given configuration
 		*/
-		CacheConfiguration(const CacheConfiguration & conf);
+		CacheConfigurationWithDepObj(const CacheConfigurationWithDepObj & conf);
 
 		/**
 		returns a vector containing information about all parameters, the info objects are in the same order as the parameters
@@ -76,12 +77,12 @@ namespace CacheSystem
 		/**
 		dependency object setter
 		*/
-		void setDependencyObject(void* dependencyObject) { this->dependencyObject = dependencyObject; }
+		void setDependencyObject(DependencyObj dependencyObject) { this->dependencyObject = dependencyObject; }
 
 		/**
 		dependency object getter
 		*/
-		void* getDependencyObject() { return dependencyObject; }
+		DependencyObj getDependencyObject() { return dependencyObject; }
 
 		/**
 		sets the minimum data creation time
@@ -106,13 +107,35 @@ namespace CacheSystem
 		uint64_t getMaximumDataSize() { return maximumDataSize; }
 	};
 
+	template <typename DependencyObj>
+	CacheConfigurationWithDepObj<DependencyObj>::CacheConfigurationWithDepObj(const CacheConfigurationWithDepObj<DependencyObj> & conf)
+	{
+		for (unsigned int i = 0; i < conf.paramsInfo.size(); i++)
+			paramsInfo.push_back(conf.paramsInfo[i]->getCopy());
+		returnInfo = conf.returnInfo == nullptr ? nullptr : conf.returnInfo->getCopy();
+		minimumDataCreationTime = conf.minimumDataCreationTime;		
+		dependencyObject = conf.dependencyObject;
+		maximumDataSize = conf.maximumDataSize;
+	}
+	
+	template <typename DependencyObj>
 	template <class Type>
-	void CacheConfiguration::setParamInfo(unsigned int paramIndex, TypedParameterInfo<Type> paramInfo)
+	void CacheConfigurationWithDepObj<DependencyObj>::setParamInfo(unsigned int paramIndex, const TypedParameterInfoWithDepObj<Type, DependencyObj>& paramInfo)
 	{
 		while (paramsInfo.size() <= paramIndex)
 			paramsInfo.push_back(nullptr);
-		paramsInfo[paramIndex] = std::shared_ptr<ParameterInfo>(new TypedParameterInfo<Type>(paramInfo));
+		paramsInfo[paramIndex] = std::shared_ptr<ParameterInfo>(new TypedParameterInfoWithDepObj<Type, DependencyObj>(paramInfo));
 	}
+
+	/**
+	contains configuration for a cached function with void* dependency object
+	*/
+	using CacheConfiguration = typename CacheConfigurationWithDepObj<void*>;
+
+	/**
+	contains configuration for a cached function using no dependency object
+	*/
+	using CacheConfigurationNoDepObj = typename CacheConfigurationWithDepObj<NoDepObj>;
 }
 
 #endif

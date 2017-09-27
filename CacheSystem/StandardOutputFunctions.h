@@ -1,57 +1,26 @@
-#ifndef _STANDARD_OUTPUT_FUNCTIONS_H
-#define _STANDARD_OUTPUT_FUNCTIONS_H
-#include <string>
+/**
+DO NOT PLACE: #pragma once or #ifndef here
+this file is worked out from StandardFunctions.h
+*/
 
-namespace CacheSystem
+#ifndef _STANDARD_FUNCTIONS_INCLUDE
+#include "StandardFunctions.h"
+#else
+/**
+no generic standardOutputFunction available
+*/
+template <class Type>
+static void standardOutputFunction(const Type & storedValue, Type & outputValue _DEPENDENCY_OBJECT)
 {
-	namespace StandardFunctions
-	{
-		/**
-		no generic standardOutputFunction available
-		only throws exception
-		*/
-		template <class Type> void standardOutputFunction(const Type & storedValue, Type & outputValue, void*)
-		{
-			std::string message = "No standardOutputFunction available for type ";
-			std::string type = std::string(typeid(Type).name());
-			throw std::exception((message + type).c_str());
-		}
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardOutputFunction(int* const & storedValuePointer, int* & outputPointer, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardOutputFunction(unsigned int* const & storedValuePointer, unsigned int* & outputPointer, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardOutputFunction(char* const & storedValuePointer, char* & outputPointer, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardOutputFunction(std::string* const & storedValuePointer, std::string* & outputPointer, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardOutputFunction(double* const & storedValuePointer, double* & outputPointer, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardOutputFunction(float* const & storedValuePointer, float* & outputPointer, void*);
-
-		/**
-		uses the = operator to copy the value
-		*/
-		template <> void standardOutputFunction(bool* const & storedValuePointer, bool* & outputPointer, void*);
-	}
+	static_assert(false, "No standardOutputFunction available for this type");
 }
 
+#define STD_OUTPUTFUNC_SPECIALIZE(Type) \
+		template <> static void standardOutputFunction(const Type & storedValue, Type & outputValue _DEPENDENCY_OBJECT)\
+		{ \
+			outputValue = storedValue;\
+		}
+
+STD_SPECIALIZE_STD_TYPES(STD_OUTPUTFUNC_SPECIALIZE)
+#undef STD_OUTPUTFUNC_SPECIALIZE
 #endif

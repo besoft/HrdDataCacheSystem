@@ -1,6 +1,7 @@
 #ifndef _TYPED_VALUE_H
 #define _TYPED_VALUE_H
 #include "Value.h"
+#include "DataManipulationFunctionsTypeTraits.h"
 
 namespace CacheSystem
 {
@@ -8,8 +9,8 @@ namespace CacheSystem
 	represents a concrete cached value
 	Type is the type of the value
 	*/
-	template <class Type>
-	class TypedValue : public Value
+	template <class Type, class DepObj>
+	class TypedValueWithDepObj : public Value, DataManipulationFunctionsTypeTraits<Type, DepObj>
 	{
 	private:
 		/**
@@ -20,23 +21,23 @@ namespace CacheSystem
 		/**
 		pointer to a function which defines how to destroy the value (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		void(*destroyFunction)(Type &, void*);
+		DestroyFunction destroyFunction;
 
 		/**
 		pointer to the dependency object
 		*/
-		void* dependencyObject;
+		DepObj dependencyObject;
 
 	public:
 		/**
 		initializes the value using the specified initFunction (see TypedParameterInfo and TypedReturnInfo classes)
 		*/
-		TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*), void* dependencyObject, void(*destroyFunction)(Type &, void*));
+		TypedValueWithDepObj(const Type & value, InitFunction initFunction, DepObj dependencyObject, DestroyFunction destroyFunction);
 
 		/**
 		correctly destroys the value using the destroyFunction
 		*/
-		~TypedValue();
+		~TypedValueWithDepObj();
 
 		/**
 		returns the value
@@ -44,18 +45,17 @@ namespace CacheSystem
 		const Type & getValue() { return *value; }
 	};
 
-	template <class Type>
-	TypedValue<Type>::TypedValue(const Type & value, void(*initFunction)(const Type &, Type*, void*),
-		void* dependencyObject, void(*destroyFunction)(Type &, void*))
+	template <class Type, class DepObj>
+	TypedValueWithDepObj<Type,DepObj>::TypedValueWithDepObj(const Type & value, InitFunction initFunction, DepObj dependencyObject, DestroyFunction destroyFunction)
 		: value((Type*)new char[sizeof(Type)]), destroyFunction(destroyFunction), dependencyObject(dependencyObject)
 	{
-		initFunction(value, this->value, dependencyObject);
+		DMFuncInvoker<DepObj>(this->dependencyObject)(initFunction, value, this->value);
 	}
 
-	template <class Type>
-	TypedValue<Type>::~TypedValue()
+	template <class Type, class DepObj>
+	TypedValueWithDepObj<Type, DepObj>::~TypedValueWithDepObj()
 	{
-		destroyFunction(*value, dependencyObject);
+		DMFuncInvoker<DepObj>(this->dependencyObject)(destroyFunction, *this->value);
 		delete[] ((char*)value);
 	}
 }

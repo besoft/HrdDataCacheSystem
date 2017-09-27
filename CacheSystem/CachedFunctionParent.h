@@ -6,7 +6,7 @@ namespace CacheSystem
 	class CachedFunctionManager;
 	class CacheData;
 	/**
-	only defined to make a common perent for all CachedFunction classes
+	only defined to make a common parent for all CachedFunction classes
 	*/
 	class CachedFunctionParent
 	{
