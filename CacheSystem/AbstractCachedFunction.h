@@ -27,7 +27,7 @@ namespace CacheSystem
 		/**
 		number of parameters of the function
 		*/
-		int numberOfParameters;
+		const int numberOfParameters = sizeof...(ParamTypes);
 
 		/**
 		after the call method is called the value on the given address is set to true if the data on the output are stored in cache, otherwise it is set to false
@@ -49,23 +49,6 @@ namespace CacheSystem
 		the CachedFunction object simply simulates calling this function
 		*/
 		std::function<ReturnType(ParamTypes...)> function;
-
-		/**
-		recursively iterates through all parameters passed as otherParams and counts them, the result is stored into the numberOfParameters
-		*/
-		template <class FirstType, class... OtherTypes> void setNumberOfParameters(int numberOfParameters, const FirstType & firstParam,
-			const OtherTypes &... otherParams)
-		{
-			setNumberOfParameters(numberOfParameters + 1, otherParams...);
-		}
-
-		/**
-		stops the recursion of setNumberOfParameters
-		*/
-		template <class Type> void setNumberOfParameters(int numberOfParameters, const Type & param)
-		{
-			this->numberOfParameters = numberOfParameters + 1;
-		}
 
 		/**
 		recursively iterates through all parameters passed as otherParams and calculates the hash value of all input parameters
@@ -134,7 +117,7 @@ namespace CacheSystem
 	AbstractCachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::AbstractCachedFunctionWithDepObj(
 		const CacheConfigurationWithDepObj<DependencyObj> & conf,
 		std::function<ReturnType(ParamTypes...)>& function, CachedFunctionManager* manager)
-		: CachedFunctionParent(manager), conf(conf), function(function), numberOfParameters(-1), dataInCacheIndicator(nullptr)
+		: CachedFunctionParent(manager), conf(conf), function(function), dataInCacheIndicator(nullptr)
 	{
 		QueryPerformanceFrequency((LARGE_INTEGER*)&cpuTicksPerMs);
 		cpuTicksPerMs /= 1000;

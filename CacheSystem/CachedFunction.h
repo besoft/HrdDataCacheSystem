@@ -23,8 +23,7 @@ namespace CacheSystem
 	ReturnType CachedFunctionWithDepObj<DependencyObj, ReturnType, ParamTypes...>::call(ParamTypes... params)
 	{
 		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
-		if (numberOfParameters == -1)
-			setNumberOfParameters(0, params...);
+		
 		size_t hash = calculateHash(0, params...);
 		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);  //find data for given input
 		TypedReturnInfoWithDepObj<ReturnType, DependencyObj>* returnInfo = (TypedReturnInfoWithDepObj<ReturnType, DependencyObj>*)conf.getReturnInfo().get();
@@ -80,8 +79,7 @@ namespace CacheSystem
 	void CachedFunctionWithDepObj<DependencyObj, void, ParamTypes...>::call(ParamTypes... params)
 	{
 		CachedFunctionManager::CachedFunctionCallLocker locker(getManager());
-		if (numberOfParameters == -1)
-			setNumberOfParameters(0, params...);
+		
 		size_t hash = calculateHash(0, params...);
 		std::shared_ptr<CacheData> data = cacheData.getCacheData(hash, conf.getParamsInfo(), conf.getDependencyObject(), params...);
 		if (data == nullptr) //if there are no data for given input
