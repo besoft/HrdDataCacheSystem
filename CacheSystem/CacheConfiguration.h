@@ -131,6 +131,11 @@ namespace CacheSystem
 	contains configuration for a cached function with void* dependency object
 	*/
 	using CacheConfiguration = typename CacheConfigurationWithDepObj<void*>;
+
+	/**
+	contains configuration for a cached function using no dependency object
+	*/
+	using CacheConfigurationNoDepObj = typename CacheConfigurationWithDepObj<NoDepObj>;
 }
 
 #endif

@@ -37,7 +37,9 @@ namespace CacheSystem
 			int64_t creationTime = (t2 - t1) / cpuTicksPerMs;
 			size_t dataSize = calculateSize(0, params...);
 			if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)
-				dataSize += returnInfo->getSizeFunction(returnValue, conf.getDependencyObject());
+				dataSize += DMFuncInvoker<DependencyObj>(conf.getDependencyObject())
+							(returnInfo->getSizeFunction, returnValue);
+
 			if (creationTime < conf.getMinimumDataCreationTime() ||   //if the data were created too quickly
 				dataSize > conf.getMaximumDataSize() || dataSize > manager->getCacheCapacity())  //or the data is too big
 			{
@@ -63,12 +65,15 @@ namespace CacheSystem
 		data->setOutput(conf.getParamsInfo(), conf.getDependencyObject(), params...);  //sets output parameters of this method
 		//cout << "Collisions: " << cacheData.maxCollisions << endl;
 		if (returnInfo->returnType == CacheSystem::ReturnType::UsedReturn)  //if return value is not ignored
-		{			
+		{	
+			const ReturnType& retVal = ((TypedValueWithDepObj<ReturnType, DependencyObj>*)data->getReturnValue())->getValue();
+
 			auto retFunc = returnInfo->returnFunction.target<
 				std::add_pointer<TypedReturnInfoWithDepObj<ReturnType, DependencyObj>::ReturnFunctionSig>::type>();
 			if (retFunc && *retFunc == StandardFunctionsWithDepObj<DependencyObj>::DirectReturn<ReturnType>)
-				return ((TypedValueWithDepObj<ReturnType, DependencyObj>*)data->getReturnValue())->getValue();  //returns the value directly
-			return returnInfo->returnFunction(((TypedValueWithDepObj<ReturnType, DependencyObj>*)data->getReturnValue())->getValue(), conf.getDependencyObject());  //returns the value using the return function
+				return retVal;  //returns the value directly
+			return DMFuncInvoker<DependencyObj>(conf.getDependencyObject())
+				(returnInfo->returnFunction, retVal);  //returns the value using the return function
 		}
 	}
 

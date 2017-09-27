@@ -53,6 +53,12 @@ namespace CacheSystem
 	*/
 	template <class ReturnType, class... ParamTypes>
 	using CachedFunction = typename CachedFunctionWithDepObj<void*, ReturnType, ParamTypes...>;	
+
+	/**
+	alias that manages the caching and contains all the cached data using no dependency object
+	*/
+	template <class ReturnType, class... ParamTypes>
+	using CachedFunctionNoDepObj = typename CachedFunctionWithDepObj<NoDepObj, ReturnType, ParamTypes...>;	
 }
 
 #endif

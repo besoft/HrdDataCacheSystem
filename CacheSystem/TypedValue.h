@@ -49,13 +49,13 @@ namespace CacheSystem
 	TypedValueWithDepObj<Type,DepObj>::TypedValueWithDepObj(const Type & value, InitFunction initFunction, DepObj dependencyObject, DestroyFunction destroyFunction)
 		: value((Type*)new char[sizeof(Type)]), destroyFunction(destroyFunction), dependencyObject(dependencyObject)
 	{
-		initFunction(value, this->value, dependencyObject);
+		DMFuncInvoker<DepObj>(this->dependencyObject)(initFunction, value, this->value);
 	}
 
 	template <class Type, class DepObj>
 	TypedValueWithDepObj<Type, DepObj>::~TypedValueWithDepObj()
 	{
-		destroyFunction(*value, dependencyObject);
+		DMFuncInvoker<DepObj>(this->dependencyObject)(destroyFunction, *this->value);
 		delete[] ((char*)value);
 	}
 }

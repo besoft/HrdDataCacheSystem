@@ -11,7 +11,7 @@ this file is worked out from StandardFunctions.h
 no generic standardGetSizeFunction available
 */
 template <class Type>
-static size_t standardGetSizeFunction(const Type & value, DependencyObj)
+static size_t standardGetSizeFunction(const Type & value _DEPENDENCY_OBJECT)
 {
 	static_assert(false, "No standardGetSizeFunction available for this type");
 }
@@ -19,13 +19,13 @@ static size_t standardGetSizeFunction(const Type & value, DependencyObj)
 /**
 returns sum of sizeof(value) and number of characters in the string
 */
-template <> static size_t standardGetSizeFunction(const std::string & value, DependencyObj)
+template <> static size_t standardGetSizeFunction(const std::string & value _DEPENDENCY_OBJECT)
 {	
 	return sizeof(value) + (value.size() + 1) * sizeof(char);
 }
 
 #define STD_FUNC_SPECIALIZE(type) \
-		template <> static size_t standardGetSizeFunction(const type& value, DependencyObj)\
+		template <> static size_t standardGetSizeFunction(const type& value _DEPENDENCY_OBJECT)\
 		{ \
 			return sizeof(value); \
 		}

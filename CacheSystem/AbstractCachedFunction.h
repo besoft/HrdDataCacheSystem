@@ -143,7 +143,7 @@ namespace CacheSystem
 	{		
 		TypedParameterInfoWithDepObj<Type, DependencyObj>* paramInfo = (TypedParameterInfoWithDepObj<Type, DependencyObj>*)conf.getParamsInfo()[paramIndex].get();
 		if (paramInfo->paramType == ParameterType::InputParam)
-			return paramInfo->hashFunction(param, conf.getDependencyObject());
+			return DMFuncInvoker<DependencyObj>(conf.getDependencyObject())(paramInfo->hashFunction, param);
 		return 0;		
 	}	
 
@@ -165,7 +165,7 @@ namespace CacheSystem
 	{		
 		TypedParameterInfoWithDepObj<Type, DependencyObj>* paramInfo = (TypedParameterInfoWithDepObj<Type, DependencyObj>*)conf.getParamsInfo()[paramIndex].get();
 		if (paramInfo->paramType != ParameterType::IgnoredParam)
-			return paramInfo->getSizeFunction(param, conf.getDependencyObject());
+			return DMFuncInvoker<DependencyObj>(conf.getDependencyObject())(paramInfo->getSizeFunction, param);
 		return 0;
 	}
 }

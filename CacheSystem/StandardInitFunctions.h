@@ -10,13 +10,13 @@ this file is worked out from StandardFunctions.h
 uses placement new operator to call the copy constructor on the uninitialized memory block
 */
 template <typename Type>
-static void standardInitFunction(const Type & source, Type* destination, DependencyObj)
+static void standardInitFunction(const Type & source, Type* destination _DEPENDENCY_OBJECT)
 {
 	new(destination)Type(source);
 }
 		
 #define STD_INITFUNC_SPECIALIZE(type) \
-		template <> static void standardInitFunction(const type & source, type* destination, DependencyObj)\
+		template <> static void standardInitFunction(const type & source, type* destination _DEPENDENCY_OBJECT)\
 		{ \
 			*destination = source;\
 		}

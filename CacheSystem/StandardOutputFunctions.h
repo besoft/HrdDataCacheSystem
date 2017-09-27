@@ -10,13 +10,13 @@ this file is worked out from StandardFunctions.h
 no generic standardOutputFunction available
 */
 template <class Type>
-static void standardOutputFunction(const Type & storedValue, Type & outputValue, DependencyObj)
+static void standardOutputFunction(const Type & storedValue, Type & outputValue _DEPENDENCY_OBJECT)
 {
 	static_assert(false, "No standardOutputFunction available for this type");
 }
 
 #define STD_OUTPUTFUNC_SPECIALIZE(Type) \
-		template <> static void standardOutputFunction(const Type & storedValue, Type & outputValue, DependencyObj)\
+		template <> static void standardOutputFunction(const Type & storedValue, Type & outputValue _DEPENDENCY_OBJECT)\
 		{ \
 			outputValue = storedValue;\
 		}

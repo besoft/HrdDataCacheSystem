@@ -124,6 +124,10 @@ namespace CacheSystem
 	/** TypedParameterInfo with void* dependency object - used for the backward compatibility*/
 	template<typename Type>
 	using TypedReturnInfo = typename TypedReturnInfoWithDepObj<Type, void*>;
+	
+	/** alias for data manipulation functions with no dependency object */
+	template<typename Type>
+	using TypedReturnInfoNoDepObj = typename TypedReturnInfoWithDepObj<Type, NoDepObj>;
 }
 
 #endif

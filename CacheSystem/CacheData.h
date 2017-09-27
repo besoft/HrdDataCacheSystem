@@ -246,7 +246,10 @@ namespace CacheSystem
 		if (info->paramType == ParameterType::InputParam)
 		{
 			TypedValueWithDepObj<FirstType, DepObj>* value = (TypedValueWithDepObj<FirstType, DepObj>*)inputParameters[inputIndex];
-			if (!(info->equalFunction(value->getValue(), firstParam, dependencyObject)))
+			if (!(
+				DMFuncInvoker<DepObj>(dependencyObject)(info->equalFunction, value->getValue(), firstParam)
+				//info->equalFunction(value->getValue(), firstParam, dependencyObject)
+				))
 			{
 				return false;
 			}
@@ -265,7 +268,8 @@ namespace CacheSystem
 		if (info->paramType == ParameterType::InputParam)
 		{
 			TypedValueWithDepObj<Type, DepObj>* value = (TypedValueWithDepObj<Type, DepObj>*)inputParameters[inputIndex];
-			return info->equalFunction(value->getValue(), param, dependencyObject);
+			return DMFuncInvoker<DepObj>(dependencyObject)(info->equalFunction, value->getValue(), param);
+				//info->equalFunction(value->getValue(), param, dependencyObject);
 		}
 		else
 			return true;
@@ -309,7 +313,10 @@ namespace CacheSystem
 		if (info->paramType == ParameterType::OutputParam)
 		{
 			TypedValueWithDepObj<FirstType, DepObj>* value = (TypedValueWithDepObj<FirstType, DepObj>*)outputParameters[outputIndex];
-			info->outputFunction(value->getValue(), firstParam, dependencyObject);
+			
+			DMFuncInvoker<DepObj> invoker(dependencyObject);
+			invoker(info->outputFunction, value->getValue(), firstParam);
+			//info->outputFunction(value->getValue(), firstParam, dependencyObject);
 			outputIteration(outputIndex + 1, paramIndex + 1, paramsInfo, dependencyObject, otherParams...);
 		}
 		else
@@ -324,7 +331,11 @@ namespace CacheSystem
 		if (info->paramType == ParameterType::OutputParam)
 		{
 			TypedValueWithDepObj<Type, DepObj>* value = (TypedValueWithDepObj<Type, DepObj>*)outputParameters[outputIndex];
-			info->outputFunction(value->getValue(), param, dependencyObject);
+			
+			DMFuncInvoker<DepObj> invoker(dependencyObject);		//MSVC cannot compile it when placed in one line, no idea why
+			invoker(info->outputFunction, value->getValue(), param);
+
+			//info->outputFunction(value->getValue(), param, dependencyObject);
 		}
 	}
 }

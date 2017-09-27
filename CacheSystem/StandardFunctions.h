@@ -1,8 +1,8 @@
 #ifndef _STANDARD_FUNCTIONS_H
 #define _STANDARD_FUNCTIONS_H
 
+#include "DataManipulationFunctionsTypeTraits.h"
 #include <string>
-#include <functional>
 
 namespace CacheSystem
 {		
@@ -41,6 +41,9 @@ namespace CacheSystem
 		STD_SPECIALIZE_STD_TYPES_NOSTRING(STD_SPECIALIZE_FUN)\
 		STD_SPECIALIZE_FUN(std::string);
 
+//this is used as a suffix in the functions
+#define _DEPENDENCY_OBJECT	, DependencyObj
+
 //this is used in #include to detect the include recursion
 #define _STANDARD_FUNCTIONS_INCLUDE
 
@@ -57,9 +60,29 @@ namespace CacheSystem
 #include "StandardReturnFunctions.h"
 	};
 
+#undef _DEPENDENCY_OBJECT
+
+#define _DEPENDENCY_OBJECT
+	template<>
+	class StandardFunctionsWithDepObj<NoDepObj>
+	{
+	public:
+#include "StandardEqualFunctions.h"
+#include "StandardInitFunctions.h"
+#include "StandardOutputFunctions.h"
+#include "StandardDestroyFunctions.h"
+#include "StandardHashFunctions.h"
+#include "StandardGetSizeFunctions.h"
+#include "StandardReturnFunctions.h"
+	};
+
+#undef _DEPENDENCY_OBJECT
 #undef _STANDARD_FUNCTIONS_INCLUDE
 
 	//alias for backward compatibility with void* dependency objects
 	using StandardFunctions = typename StandardFunctionsWithDepObj<void*>;
+
+	//alias for standard functions with no dependency object
+	using StandardFunctionsNoDepObj = typename StandardFunctionsWithDepObj<NoDepObj>;
 }
 #endif

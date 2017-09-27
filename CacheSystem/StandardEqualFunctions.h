@@ -10,7 +10,7 @@
 No generic standardEqualFunction available
 */
 template <typename Type>
-static bool standardEqualFunction(const Type & val1, const Type & val2, DependencyObj)
+static bool standardEqualFunction(const Type & val1, const Type & val2 _DEPENDENCY_OBJECT)
 {
 	static_assert(false, "No standardEqualFunction available for this type");
 
@@ -21,7 +21,7 @@ static bool standardEqualFunction(const Type & val1, const Type & val2, Dependen
 }
 
 #define STD_FUNC_SPECIALIZE(Type) \
-		template <> static bool standardEqualFunction(const Type & value1, const Type & value2, DependencyObj) \
+		template <> static bool standardEqualFunction(const Type & value1, const Type & value2 _DEPENDENCY_OBJECT) \
 		{ \
 			return value1 == value2;\
 		}

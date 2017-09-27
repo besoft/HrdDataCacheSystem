@@ -12,13 +12,13 @@ this file is worked out from StandardFunctions.h
 no generic standardHashFunction available
 */
 template <class Type>
-static size_t standardHashFunction(const Type & value, DependencyObj)
+static size_t standardHashFunction(const Type & value _DEPENDENCY_OBJECT)
 {
 	static_assert(false, "No standardHashFunction available for this type");
 }
 
 #define STD_HASHFUNC_SPECIALIZE(type) \
-		template <> static size_t standardHashFunction(const type& value, DependencyObj)\
+		template <> static size_t standardHashFunction(const type& value _DEPENDENCY_OBJECT)\
 		{ \
 			return std::hash<type>{}(value); \
 		}

@@ -24,7 +24,7 @@ protected:
 	/**
 	the caching object
 	*/
-	CacheSystem::CachedFunction<int, FilterClass*, vtkInformation*, vtkInformationVector**, vtkInformationVector*>* cachedFunction;
+	CacheSystem::CachedFunctionNoDepObj<int, FilterClass*, vtkInformation*, vtkInformationVector**, vtkInformationVector*>* cachedFunction;
 	
 	/**
 	constructor for initialization
@@ -41,53 +41,53 @@ protected:
 		}
 		mutex.unlock();
 
-		CacheSystem::CacheConfiguration conf;
-		conf.setParamInfo(0, CacheSystem::TypedParameterInfo<FilterClass*>(CacheSystem::ParameterType::InputParam, 
-			[=](FilterClass* const & filter1, FilterClass* const & filter2, void*)
+		CacheSystem::CacheConfigurationNoDepObj conf;
+		conf.setParamInfo(0, CacheSystem::TypedParameterInfoNoDepObj<FilterClass*>(CacheSystem::ParameterType::InputParam, 
+			[=](FilterClass* const & filter1, FilterClass* const & filter2)
 			{
 				return this->filterEqualsFunction(filter1, filter2);
 			},
-			[=](FilterClass* const & source, FilterClass** destination, void*){ this->filterInitFunction(source, *destination);	},
+			[=](FilterClass* const & source, FilterClass** destination){ this->filterInitFunction(source, *destination);	},
 			nullptr, 
-			[=](FilterClass* & filter, void*) { return this->filterDestroyFunction(filter); },
-			[=](FilterClass* const & filter, void*) { return this->filterHashFunction(filter); },
-			[=](FilterClass* const & filter, void*) { return this->filterGetSizeFunction(filter); }
+			[=](FilterClass* & filter) { return this->filterDestroyFunction(filter); },
+			[=](FilterClass* const & filter) { return this->filterHashFunction(filter); },
+			[=](FilterClass* const & filter) { return this->filterGetSizeFunction(filter); }
 			)
 		);
-		conf.setParamInfo(1, CacheSystem::TypedParameterInfo<vtkInformation*>(CacheSystem::ParameterType::InputParam, 
-			[=](vtkInformation* const & request1, vtkInformation* const & request2, void*)
+		conf.setParamInfo(1, CacheSystem::TypedParameterInfoNoDepObj<vtkInformation*>(CacheSystem::ParameterType::InputParam,
+			[=](vtkInformation* const & request1, vtkInformation* const & request2)
 			{
 				return this->requestEqualsFunction(request1, request2);
 			},
-			[=](vtkInformation* const & source, vtkInformation** destination, void*){ this->requestInitFunction(source, *destination); },
+			[=](vtkInformation* const & source, vtkInformation** destination){ this->requestInitFunction(source, *destination); },
 			nullptr,
-			[=](vtkInformation* & request, void*) { return this->requestDestroyFunction(request); },
-			[=](vtkInformation* const & request, void*)	{ return this->requestHashFunction(request); },
-			[=](vtkInformation* const & request, void*) { return this->requestGetSizeFunction(request); }
+			[=](vtkInformation* & request) { return this->requestDestroyFunction(request); },
+			[=](vtkInformation* const & request)	{ return this->requestHashFunction(request); },
+			[=](vtkInformation* const & request) { return this->requestGetSizeFunction(request); }
 			)
 		);
-		conf.setParamInfo(2, CacheSystem::TypedParameterInfo<vtkInformationVector**>(CacheSystem::ParameterType::InputParam, 
-			[=](vtkInformationVector** const & input1, vtkInformationVector** const & input2, void*)
+		conf.setParamInfo(2, CacheSystem::TypedParameterInfoNoDepObj<vtkInformationVector**>(CacheSystem::ParameterType::InputParam,
+			[=](vtkInformationVector** const & input1, vtkInformationVector** const & input2)
 			{
 				return this->inputEqualsFunction(input1, input2, nullptr);
 			},
-			[=](vtkInformationVector** const & source, vtkInformationVector*** destination, void*){	this->inputInitFunction(source, *destination); },
+			[=](vtkInformationVector** const & source, vtkInformationVector*** destination){	this->inputInitFunction(source, *destination); },
 			nullptr, 
-			[=](vtkInformationVector** & input, void*) { return this->inputDestroyFunction(input); },
-			[=](vtkInformationVector** const & input, void*) { return this->inputHashFunction(input); },
-			[=](vtkInformationVector** const & input, void*) { return this->inputGetSizeFunction(input); }
+			[=](vtkInformationVector** & input) { return this->inputDestroyFunction(input); },
+			[=](vtkInformationVector** const & input) { return this->inputHashFunction(input); },
+			[=](vtkInformationVector** const & input) { return this->inputGetSizeFunction(input); }
 			));
-		conf.setParamInfo(3, CacheSystem::TypedParameterInfo<vtkInformationVector*>(CacheSystem::ParameterType::OutputParam, 
+		conf.setParamInfo(3, CacheSystem::TypedParameterInfoNoDepObj<vtkInformationVector*>(CacheSystem::ParameterType::OutputParam,
 			nullptr, 
-			[=](vtkInformationVector* const & source, vtkInformationVector** destination, void*) { return this->outputInitFunction(source, *destination); },
-			[=](vtkInformationVector* const & storedValuePointer, vtkInformationVector* & outputPointer, void*) { return this->outputCopyOutFunction(storedValuePointer, outputPointer); },
-			[=](vtkInformationVector* & output, void*) { return this->outputDestroyFunction(output); },
+			[=](vtkInformationVector* const & source, vtkInformationVector** destination) { return this->outputInitFunction(source, *destination); },
+			[=](vtkInformationVector* const & storedValuePointer, vtkInformationVector* & outputPointer) { return this->outputCopyOutFunction(storedValuePointer, outputPointer); },
+			[=](vtkInformationVector* & output) { return this->outputDestroyFunction(output); },
 			nullptr, 
-			[=](vtkInformationVector* const & output, void*) { return this->outputGetSizeFunction(output); }
+			[=](vtkInformationVector* const & output) { return this->outputGetSizeFunction(output); }
 			)
 		);
 
-		conf.setReturnInfo(CacheSystem::TypedReturnInfo<int>());  //the default constructor uses the standard functions for int (see CacheSystem::StandardFunctions)
+		conf.setReturnInfo(CacheSystem::TypedReturnInfoNoDepObj<int>());  //the default constructor uses the standard functions for int (see CacheSystem::StandardFunctions)
 		cachedFunction = CacheManagerSource::cacheManager->createCachedFunction(conf, 
 			[](FilterClass* o, vtkInformation* request,
 				vtkInformationVector** inputVector, vtkInformationVector* outputVector)

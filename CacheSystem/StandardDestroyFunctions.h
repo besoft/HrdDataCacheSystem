@@ -10,7 +10,7 @@ this file is worked out from StandardFunctions.h
 		calls the instance's destructor (if it's not a primitive type or pointer)
 		*/
 		template <class Type> 
-		static void standardDestroyFunction(Type & instance, DependencyObj)
+		static void standardDestroyFunction(Type & instance _DEPENDENCY_OBJECT)
 		{
 			instance.~Type();
 		}		
